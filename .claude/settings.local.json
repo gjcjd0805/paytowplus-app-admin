@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(nul)",
+      "Bash(awk:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(./gradlew build:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill //F //PID 38308)",
+      "Bash(java -jar:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
