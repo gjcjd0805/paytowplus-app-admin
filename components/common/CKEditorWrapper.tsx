@@ -136,31 +136,65 @@ class ServerUploadAdapter {
 export default function CKEditorWrapper({ value, onChange, placeholder }: CKEditorWrapperProps) {
   const editorRef = useRef<any>(null);
   const [editorLoaded, setEditorLoaded] = useState(false);
-  const { CKEditor, ClassicEditor } = editorRef.current || {};
+  const [editor, setEditor] = useState<any>(null);
 
   useEffect(() => {
-    editorRef.current = {
-      CKEditor: require('@ckeditor/ckeditor5-react').CKEditor,
-      ClassicEditor: require('@ckeditor/ckeditor5-build-classic'),
-    };
-    setEditorLoaded(true);
-  }, []);
+    const loadEditor = async () => {
+      try {
+        // CKEditor 5 동적 import
+        const { CKEditor } = await import('@ckeditor/ckeditor5-react');
+        const {
+          ClassicEditor,
+          Essentials,
+          Bold,
+          Italic,
+          Paragraph,
+          Heading,
+          Link,
+          List,
+          Image,
+          ImageToolbar,
+          ImageUpload,
+          Table,
+          BlockQuote,
+          Undo,
+          Indent,
+          IndentBlock,
+          Font
+        } = await import('ckeditor5');
 
-  return (
-    <>
-      {editorLoaded ? (
-        <div style={{ maxWidth: '440px' }}>
-          <CKEditor
-            editor={ClassicEditor}
-            data={value}
-            config={{
-            placeholder: placeholder || '내용을 입력하세요',
+        editorRef.current = {
+          CKEditor,
+          ClassicEditor,
+          config: {
+            licenseKey: 'GPL', // GPL 라이선스 키 (오픈소스 프로젝트용)
+            plugins: [
+              Essentials,
+              Bold,
+              Italic,
+              Paragraph,
+              Heading,
+              Link,
+              List,
+              Image,
+              ImageToolbar,
+              ImageUpload,
+              Table,
+              BlockQuote,
+              Undo,
+              Indent,
+              IndentBlock,
+              Font
+            ],
             toolbar: [
               'heading',
               '|',
               'bold',
               'italic',
               'link',
+              '|',
+              'fontColor',
+              'fontBackgroundColor',
               '|',
               'bulletedList',
               'numberedList',
@@ -174,18 +208,37 @@ export default function CKEditorWrapper({ value, onChange, placeholder }: CKEdit
               'blockQuote',
               '|',
               'undo',
-              'redo',
-            ],
-            language: 'ko',
-            image: {
-              toolbar: [
-                'imageTextAlternative',
-                'imageStyle:inline',
-                'imageStyle:block',
-                'imageStyle:side',
-              ],
-            },
-          }}
+              'redo'
+            ]
+          }
+        };
+
+        setEditorLoaded(true);
+      } catch (error) {
+        console.error('CKEditor 로드 실패:', error);
+      }
+    };
+
+    loadEditor();
+  }, []);
+
+  if (!editorLoaded || !editorRef.current) {
+    return (
+      <div className="border border-gray-300 rounded p-4 text-gray-500">
+        에디터를 로딩 중...
+      </div>
+    );
+  }
+
+  const { CKEditor, ClassicEditor, config } = editorRef.current;
+
+  return (
+    <>
+      <div style={{ maxWidth: '440px' }}>
+        <CKEditor
+          editor={ClassicEditor}
+          data={value}
+          config={config}
           onReady={(editor: any) => {
             // 서버 업로드 어댑터 등록
             editor.plugins.get('FileRepository').createUploadAdapter = (loader: any) => {
@@ -197,12 +250,7 @@ export default function CKEditorWrapper({ value, onChange, placeholder }: CKEdit
             onChange(data);
           }}
         />
-        </div>
-      ) : (
-        <div className="border border-gray-300 rounded p-4 text-gray-500">
-          에디터를 로딩 중...
-        </div>
-      )}
+      </div>
       <style jsx global>{`
         .ck-editor__editable {
           min-height: 650px;

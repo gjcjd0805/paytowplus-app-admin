@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { centersApi } from '@/lib/api';
 import type { Center } from '@/types/api';
+import { useSidebar } from '@/lib/contexts/SidebarContext';
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -145,6 +146,7 @@ const menuItems: MenuItem[] = [
 ];
 
 export default function Sidebar() {
+  const { sidebarOpen, closeSidebar } = useSidebar();
   const pathname = usePathname();
   const [centerName, setCenterName] = useState('pay++');
   const [centers, setCenters] = useState<Center[]>([]);
@@ -232,11 +234,48 @@ export default function Sidebar() {
     );
   };
 
+  const handleMenuClick = () => {
+    // 모바일에서 메뉴 클릭 시 사이드바 닫기
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        closeSidebar();
+      }, 100);
+    }
+  };
+
   return (
-    <aside className="w-64 bg-gradient-to-b from-white to-pastel-blue min-h-screen shadow-lg">
-      <div className="px-6 pt-12 pb-6">
+    <>
+      {/* 모바일 오버레이 */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={closeSidebar}
+        />
+      )}
+
+      {/* 사이드바 */}
+      <aside className={`
+        fixed left-0 top-0 z-50 w-64 bg-gradient-to-b from-white to-pastel-blue h-screen shadow-lg
+        transition-transform duration-300 ease-in-out
+        lg:translate-x-0
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+      <div className="px-6 pt-12 pb-6 h-full overflow-y-auto">
+        {/* 모바일 닫기 버튼 */}
+        <div className="lg:hidden flex justify-end mb-4">
+          <button
+            onClick={closeSidebar}
+            className="p-2 hover:bg-white/50 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="메뉴 닫기"
+          >
+            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
         {/* 센터 선택 */}
-        <div className="relative mb-16">
+        <div className="relative mb-8 sm:mb-12 lg:mb-16">
           <button
             onClick={() => setShowCenterMenu(!showCenterMenu)}
             className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white px-5 py-3 rounded-super-cute text-lg font-bold hover:from-primary-600 hover:to-primary-700 transition-all duration-300 flex items-center justify-between shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -309,7 +348,8 @@ export default function Sidebar() {
                 ) : (
                   <Link
                     href={item.path}
-                    className={`flex items-center gap-3 px-4 py-3.5 rounded-cute transition-all duration-300 transform hover:scale-105 ${
+                    onClick={handleMenuClick}
+                    className={`flex items-center gap-3 px-4 py-3.5 rounded-cute transition-all duration-300 transform hover:scale-105 min-h-[44px] lg:min-h-0 ${
                       isActive
                         ? 'bg-white text-primary-700 shadow-md font-bold'
                         : 'text-gray-700 hover:bg-white hover:bg-opacity-50 hover:shadow-sm'
@@ -331,7 +371,8 @@ export default function Sidebar() {
                         <Link
                           key={subItem.path}
                           href={subItem.path}
-                          className={`flex items-center gap-2 px-4 py-2.5 rounded-cute transition-all duration-300 ${
+                          onClick={handleMenuClick}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-cute transition-all duration-300 min-h-[44px] lg:min-h-0 ${
                             isSubActive
                               ? 'bg-white text-primary-700 shadow-sm font-semibold'
                               : 'text-gray-600 hover:bg-white hover:bg-opacity-30 hover:text-gray-800'
@@ -351,6 +392,7 @@ export default function Sidebar() {
           })}
         </nav>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

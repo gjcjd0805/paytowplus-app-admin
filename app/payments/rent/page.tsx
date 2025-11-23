@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { paymentsApi } from '@/lib/api';
 import type { PaymentListItem } from '@/types/api';
-import Table from '@/components/common/Table';
+import { DataTable } from '@/components/common/DataTable';
+import { LoadingModal } from '@/components/common/LoadingModal';
 import Pagination from '@/components/common/Pagination';
 import { formatDateTime, formatNumber, formatStatus } from '@/utils/format';
+import { SearchSection, SearchField, DateRange, RadioGroup, SearchInputWithSelect } from '@/components/common/SearchSection';
 
 export default function RentPaymentsPage() {
   const [payments, setPayments] = useState<PaymentListItem[]>([]);
@@ -92,189 +94,182 @@ export default function RentPaymentsPage() {
   };
 
   const columns = [
-    { key: 'no', label: 'NO', width: '80px', align: 'center' as const },
-    { key: 'pg', label: 'PG', width: '100px', align: 'center' as const, render: (value: any) => formatStatus(value) },
-    { key: 'requestDt', label: '요청일시', width: '180px', align: 'center' as const, render: (value: any) => formatDateTime(value) },
-    { key: 'approvalDt', label: '승인일시', width: '180px', align: 'center' as const, render: (value: any) => value ? formatDateTime(value) : '-' },
-    { key: 'paymentStatus', label: '결제상태', width: '100px', align: 'center' as const, render: (value: any) => (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${
-        value === 'SUCCESS' ? 'bg-green-100 text-green-800' :
-        value === 'FAILED' ? 'bg-red-100 text-red-800' :
-        value === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-        'bg-gray-100 text-gray-800'
-      }`}>
-        {formatStatus(value)}
-      </span>
-    )},
-    { key: 'userName', label: '회원명', width: '120px', align: 'center' as const },
-    { key: 'paymentType', label: '결제유형', width: '100px', align: 'center' as const, render: (value: any) => (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${value === 'RECURRING' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
-        {formatStatus(value)}
-      </span>
-    )},
-    { key: 'installmentMonths', label: '할부', width: '80px', align: 'center' as const, render: (value: any) => value === 0 ? '일시불' : `${value}개월` },
-    { key: 'approvalNumber', label: '승인번호', width: '120px', align: 'center' as const },
-    { key: 'cardNumber', label: '카드번호', width: '180px', align: 'center' as const },
-    { key: 'amount', label: '승인금액', width: '120px', align: 'center' as const, render: (value: any) => formatNumber(value) },
-    { key: 'fee', label: '수수료', width: '100px', align: 'center' as const, render: (value: any) => formatNumber(value) },
-    { key: 'tid', label: 'TID', width: '150px', align: 'center' as const },
-    { key: 'resultMessage', label: '결과메시지', width: '150px', align: 'center' as const },
+    {
+      key: 'no',
+      header: 'NO',
+      width: '80px',
+      align: 'center' as const,
+      render: (_row: PaymentListItem, index: number) => currentPage * pageSize + index + 1
+    },
+    {
+      key: 'pg',
+      header: 'PG',
+      width: '100px',
+      align: 'center' as const,
+      render: (row: PaymentListItem) => formatStatus(row.pg)
+    },
+    {
+      key: 'requestDt',
+      header: '요청일시',
+      width: '180px',
+      align: 'center' as const,
+      render: (row: PaymentListItem) => formatDateTime(row.requestDt)
+    },
+    {
+      key: 'approvalDt',
+      header: '승인일시',
+      width: '180px',
+      align: 'center' as const,
+      render: (row: PaymentListItem) => row.approvalDt ? formatDateTime(row.approvalDt) : '-'
+    },
+    {
+      key: 'paymentStatus',
+      header: '결제상태',
+      width: '100px',
+      align: 'center' as const,
+      render: (row: PaymentListItem) => (
+        <span className={`px-2 py-1 rounded text-xs font-medium ${
+          row.paymentStatus === 'SUCCESS' ? 'bg-green-100 text-green-800' :
+          row.paymentStatus === 'FAILED' ? 'bg-red-100 text-red-800' :
+          row.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {formatStatus(row.paymentStatus)}
+        </span>
+      )
+    },
+    {
+      key: 'userName',
+      header: '회원명',
+      width: '120px',
+      align: 'center' as const
+    },
+    {
+      key: 'paymentType',
+      header: '결제유형',
+      width: '100px',
+      align: 'center' as const,
+      render: (row: PaymentListItem) => (
+        <span className={`px-2 py-1 rounded text-xs font-medium ${row.paymentType === 'RECURRING' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+          {formatStatus(row.paymentType)}
+        </span>
+      )
+    },
+    {
+      key: 'installmentMonths',
+      header: '할부',
+      width: '80px',
+      align: 'center' as const,
+      render: (row: PaymentListItem) => row.installmentMonths === 0 ? '일시불' : `${row.installmentMonths}개월`
+    },
+    {
+      key: 'approvalNumber',
+      header: '승인번호',
+      width: '120px',
+      align: 'center' as const
+    },
+    {
+      key: 'cardNumber',
+      header: '카드번호',
+      width: '180px',
+      align: 'center' as const
+    },
+    {
+      key: 'amount',
+      header: '승인금액',
+      width: '120px',
+      align: 'center' as const,
+      render: (row: PaymentListItem) => formatNumber(row.amount)
+    },
+    {
+      key: 'fee',
+      header: '수수료',
+      width: '100px',
+      align: 'center' as const,
+      render: (row: PaymentListItem) => formatNumber(row.fee)
+    },
+    {
+      key: 'tid',
+      header: 'TID',
+      width: '150px',
+      align: 'center' as const
+    },
+    {
+      key: 'resultMessage',
+      header: '결과메시지',
+      width: '150px',
+      align: 'center' as const
+    },
   ];
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-          <svg className="w-7 h-7 mr-2" fill="currentColor" viewBox="0 0 20 20">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+          <svg className="w-6 h-6 sm:w-7 sm:h-7 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
           </svg>
           월세 결제 리스트
         </h1>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
-        <div className="grid grid-cols-2 gap-4">
-          {/* 첫 번째 줄 */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">요청일</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                disabled={dateType === 'all'}
-                className="px-3 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-500"
-              />
-              <span className="text-gray-500">~</span>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                disabled={dateType === 'all'}
-                className="px-3 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-500"
-              />
-            </div>
-            <label className="flex items-center gap-1">
+      {/* 검색 영역 */}
+      <SearchSection>
+        <SearchField label="등록일" className="flex-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+            <DateRange
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onDateFromChange={setDateFrom}
+              onDateToChange={setDateTo}
+              disabled={dateType === 'all'}
+            />
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={dateType === 'all'}
                 onChange={(e) => setDateType(e.target.checked ? 'all' : 'range')}
-                className="w-4 h-4"
+                className="w-4 h-4 text-blue-600"
               />
-              <span className="text-sm">전체</span>
+              <span className="text-sm text-gray-700 whitespace-nowrap">전체</span>
             </label>
           </div>
+        </SearchField>
 
-          {/* 결제상태 */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">결제상태</label>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={paymentStatus === 'all'}
-                  onChange={() => setPaymentStatus('all')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">전체</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={paymentStatus === 'PENDING'}
-                  onChange={() => setPaymentStatus('PENDING')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">대기</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={paymentStatus === 'SUCCESS'}
-                  onChange={() => setPaymentStatus('SUCCESS')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">완료</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={paymentStatus === 'FAILED'}
-                  onChange={() => setPaymentStatus('FAILED')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">실패</span>
-              </label>
-            </div>
-          </div>
+        <SearchField label="결제상태" className="flex-1">
+          <RadioGroup
+            name="paymentStatus"
+            value={paymentStatus}
+            onChange={(value) => setPaymentStatus(value as any)}
+            options={[
+              { value: 'all', label: '전체' },
+              { value: 'PENDING', label: '대기' },
+              { value: 'SUCCESS', label: '완료' },
+              { value: 'FAILED', label: '실패' },
+            ]}
+          />
+        </SearchField>
 
-          {/* 두 번째 줄 - 검색조건 */}
-          <div className="col-span-2 flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">검색조건</label>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={searchType === 'userName'}
-                  onChange={() => setSearchType('userName')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">회원명</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={searchType === 'approvalNumber'}
-                  onChange={() => setSearchType('approvalNumber')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">승인번호</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={searchType === 'cardNumber'}
-                  onChange={() => setSearchType('cardNumber')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">카드번호</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={searchType === 'tid'}
-                  onChange={() => setSearchType('tid')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">TID</span>
-              </label>
-            </div>
-            <input
-              type="text"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="검색어를 입력해 주세요."
-              className="px-3 py-1.5 border border-gray-300 rounded text-sm flex-1"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <button
-              onClick={handleSearch}
-              className="px-6 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded text-sm font-medium whitespace-nowrap"
-            >
-              검색
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-6 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-sm font-medium whitespace-nowrap"
-            >
-              초기화
-            </button>
-          </div>
-        </div>
-      </div>
+        <SearchField label="검색어" className="flex-1">
+          <SearchInputWithSelect
+            searchType={searchType}
+            searchValue={searchKeyword}
+            onSearchTypeChange={(value) => setSearchType(value as any)}
+            onSearchValueChange={setSearchKeyword}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            options={[
+              { value: 'userName', label: '회원명' },
+              { value: 'approvalNumber', label: '승인번호' },
+              { value: 'cardNumber', label: '카드번호' },
+              { value: 'tid', label: 'TID' },
+            ]}
+          />
+        </SearchField>
+      </SearchSection>
 
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm text-gray-600">
+      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="text-xs sm:text-sm text-gray-600">
           전체 <span className="font-semibold text-primary-600">{formatNumber(totalElements)}</span>건
         </div>
         <div className="flex items-center space-x-2">
@@ -295,19 +290,19 @@ export default function RentPaymentsPage() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="text-gray-500">로딩 중...</div>
-        </div>
-      ) : (
-        <Table columns={columns} data={payments} />
-      )}
+      <DataTable
+        columns={columns}
+        data={payments}
+        emptyMessage="검색 결과가 없습니다."
+      />
 
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
+
+      <LoadingModal isOpen={isLoading} />
     </div>
   );
 }

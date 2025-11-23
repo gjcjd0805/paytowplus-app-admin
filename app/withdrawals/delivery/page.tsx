@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { withdrawalsApi } from '@/lib/api';
 import type { WithdrawListItem } from '@/types/api';
-import Table from '@/components/common/Table';
+import { DataTable } from '@/components/common/DataTable';
+import { LoadingModal } from '@/components/common/LoadingModal';
 import Pagination from '@/components/common/Pagination';
 import { formatDateTime, formatNumber, formatStatus } from '@/utils/format';
+import { SearchSection, SearchField, DateRange, RadioGroup, SearchInputWithSelect } from '@/components/common/SearchSection';
 
 export default function DeliveryWithdrawalsPage() {
   const [withdrawals, setWithdrawals] = useState<WithdrawListItem[]>([]);
@@ -107,41 +109,121 @@ export default function DeliveryWithdrawalsPage() {
   };
 
   const columns = [
-    { key: 'no', label: 'NO', width: '80px', align: 'center' as const },
-    { key: 'requestDt', label: '요청일시', width: '180px', align: 'center' as const, render: (value: any) => formatDateTime(value) },
-    { key: 'withdrawStatus', label: '출금상태', width: '100px', align: 'center' as const, render: (value: any) => (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${
-        value === 'SUCCESS' ? 'bg-green-100 text-green-800' :
-        value === 'FAILED' ? 'bg-red-100 text-red-800' :
-        value === 'REQUESTED' ? 'bg-blue-100 text-blue-800' :
-        value === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-        'bg-gray-100 text-gray-800'
-      }`}>
-        {formatStatus(value)}
-      </span>
-    )},
-    { key: 'userName', label: '회원명', width: '120px', align: 'center' as const },
-    { key: 'paymentType', label: '결제유형', width: '100px', align: 'center' as const, render: (value: any) => (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${value === 'RECURRING' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
-        {formatStatus(value)}
-      </span>
-    )},
-    { key: 'installmentMonths', label: '할부', width: '80px', align: 'center' as const, render: (value: any) => value === 0 ? '일시불' : `${value}개월` },
-    { key: 'approvalNumber', label: '승인번호', width: '120px', align: 'center' as const },
-    { key: 'cardNumber', label: '카드번호', width: '180px', align: 'center' as const },
-    { key: 'amount', label: '승인금액', width: '120px', align: 'center' as const, render: (value: any) => formatNumber(value) },
-    { key: 'fee', label: '수수료', width: '100px', align: 'center' as const, render: (value: any) => formatNumber(value) },
-    { key: 'transferFee', label: '이체수수료', width: '100px', align: 'center' as const, render: (value: any) => formatNumber(value) },
-    { key: 'settlementAmount', label: '정산금액', width: '120px', align: 'center' as const, render: (value: any) => formatNumber(value) },
-    { key: 'scheduledSettlementDt', label: '정산 예정일시', width: '180px', align: 'center' as const, render: (value: any) => formatDateTime(value) },
-    { key: 'resultMessage', label: '결과메시지', width: '200px', align: 'center' as const },
+    {
+      key: 'no',
+      header: 'NO',
+      width: '80px',
+      align: 'center' as const,
+      render: (_row: WithdrawListItem, index: number) => currentPage * pageSize + index + 1
+    },
+    {
+      key: 'requestDt',
+      header: '요청일시',
+      width: '180px',
+      align: 'center' as const,
+      render: (row: WithdrawListItem) => formatDateTime(row.requestDt)
+    },
+    {
+      key: 'withdrawStatus',
+      header: '출금상태',
+      width: '100px',
+      align: 'center' as const,
+      render: (row: WithdrawListItem) => (
+        <span className={`px-2 py-1 rounded text-xs font-medium ${
+          row.withdrawStatus === 'SUCCESS' ? 'bg-green-100 text-green-800' :
+          row.withdrawStatus === 'FAILED' ? 'bg-red-100 text-red-800' :
+          row.withdrawStatus === 'REQUESTED' ? 'bg-blue-100 text-blue-800' :
+          row.withdrawStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {formatStatus(row.withdrawStatus)}
+        </span>
+      )
+    },
+    {
+      key: 'userName',
+      header: '회원명',
+      width: '120px',
+      align: 'center' as const
+    },
+    {
+      key: 'paymentType',
+      header: '결제유형',
+      width: '100px',
+      align: 'center' as const,
+      render: (row: WithdrawListItem) => (
+        <span className={`px-2 py-1 rounded text-xs font-medium ${row.paymentType === 'RECURRING' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+          {formatStatus(row.paymentType)}
+        </span>
+      )
+    },
+    {
+      key: 'installmentMonths',
+      header: '할부',
+      width: '80px',
+      align: 'center' as const,
+      render: (row: WithdrawListItem) => row.installmentMonths === 0 ? '일시불' : `${row.installmentMonths}개월`
+    },
+    {
+      key: 'approvalNumber',
+      header: '승인번호',
+      width: '120px',
+      align: 'center' as const
+    },
+    {
+      key: 'cardNumber',
+      header: '카드번호',
+      width: '180px',
+      align: 'center' as const
+    },
+    {
+      key: 'amount',
+      header: '승인금액',
+      width: '120px',
+      align: 'center' as const,
+      render: (row: WithdrawListItem) => formatNumber(row.amount)
+    },
+    {
+      key: 'fee',
+      header: '수수료',
+      width: '100px',
+      align: 'center' as const,
+      render: (row: WithdrawListItem) => formatNumber(row.fee)
+    },
+    {
+      key: 'transferFee',
+      header: '이체수수료',
+      width: '100px',
+      align: 'center' as const,
+      render: (row: WithdrawListItem) => formatNumber(row.transferFee)
+    },
+    {
+      key: 'settlementAmount',
+      header: '정산금액',
+      width: '120px',
+      align: 'center' as const,
+      render: (row: WithdrawListItem) => formatNumber(row.settlementAmount)
+    },
+    {
+      key: 'scheduledSettlementDt',
+      header: '정산 예정일시',
+      width: '180px',
+      align: 'center' as const,
+      render: (row: WithdrawListItem) => formatDateTime(row.scheduledSettlementDt)
+    },
+    {
+      key: 'resultMessage',
+      header: '결과메시지',
+      width: '200px',
+      align: 'center' as const
+    },
   ];
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-          <svg className="w-7 h-7 mr-2" fill="currentColor" viewBox="0 0 20 20">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+          <svg className="w-6 h-6 sm:w-7 sm:h-7 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
             <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z" />
           </svg>
@@ -150,203 +232,95 @@ export default function DeliveryWithdrawalsPage() {
       </div>
 
       {/* 검색 조건 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
-        <div className="grid grid-cols-2 gap-4">
-          {/* 첫 번째 줄 */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">요청일</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                disabled={dateType === 'all'}
-                className="px-3 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-500"
-              />
-              <span className="text-gray-500">~</span>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                disabled={dateType === 'all'}
-                className="px-3 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-500"
-              />
-            </div>
-            <label className="flex items-center gap-1">
+      <SearchSection>
+        <SearchField label="요청일" className="flex-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+            <DateRange
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onDateFromChange={setDateFrom}
+              onDateToChange={setDateTo}
+              disabled={dateType === 'all'}
+            />
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={dateType === 'all'}
                 onChange={(e) => setDateType(e.target.checked ? 'all' : 'range')}
-                className="w-4 h-4"
+                className="w-4 h-4 text-blue-600"
               />
-              <span className="text-sm">전체</span>
+              <span className="text-sm text-gray-700 whitespace-nowrap">전체</span>
             </label>
           </div>
+        </SearchField>
 
-          {/* 출금상태 */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">출금상태</label>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={withdrawStatus === 'all'}
-                  onChange={() => setWithdrawStatus('all')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">전체</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={withdrawStatus === 'PENDING'}
-                  onChange={() => setWithdrawStatus('PENDING')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">대기</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={withdrawStatus === 'REQUESTED'}
-                  onChange={() => setWithdrawStatus('REQUESTED')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">요청완료</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={withdrawStatus === 'SUCCESS'}
-                  onChange={() => setWithdrawStatus('SUCCESS')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">완료</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={withdrawStatus === 'FAILED'}
-                  onChange={() => setWithdrawStatus('FAILED')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">실패</span>
-              </label>
-            </div>
-          </div>
+        <SearchField label="출금상태" className="flex-1">
+          <RadioGroup
+            name="withdrawStatus"
+            value={withdrawStatus}
+            onChange={(value) => setWithdrawStatus(value as any)}
+            options={[
+              { value: 'all', label: '전체' },
+              { value: 'PENDING', label: '대기' },
+              { value: 'REQUESTED', label: '요청완료' },
+              { value: 'SUCCESS', label: '완료' },
+              { value: 'FAILED', label: '실패' },
+            ]}
+          />
+        </SearchField>
 
-          {/* 두 번째 줄 - 결제유형 */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">결제유형</label>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={paymentType === 'all'}
-                  onChange={() => setPaymentType('all')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">전체</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={paymentType === 'RECURRING'}
-                  onChange={() => setPaymentType('RECURRING')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">정기</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={paymentType === 'MANUAL'}
-                  onChange={() => setPaymentType('MANUAL')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">수기</span>
-              </label>
-            </div>
-          </div>
+        <SearchField label="결제유형" className="flex-1">
+          <RadioGroup
+            name="paymentType"
+            value={paymentType}
+            onChange={(value) => setPaymentType(value as any)}
+            options={[
+              { value: 'all', label: '전체' },
+              { value: 'RECURRING', label: '정기' },
+              { value: 'MANUAL', label: '수기' },
+            ]}
+          />
+        </SearchField>
 
-          {/* 검색조건 */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">검색어</label>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={searchType === 'userName'}
-                  onChange={() => setSearchType('userName')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">회원명</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={searchType === 'approvalNumber'}
-                  onChange={() => setSearchType('approvalNumber')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">승인번호</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={searchType === 'cardNumber'}
-                  onChange={() => setSearchType('cardNumber')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">카드번호</span>
-              </label>
-            </div>
-            <input
-              type="text"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="검색어를 입력해 주세요."
-              className="px-3 py-1.5 border border-gray-300 rounded text-sm flex-1"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <button
-              onClick={handleSearch}
-              className="px-6 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded text-sm font-medium whitespace-nowrap"
-            >
-              검색
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-6 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-sm font-medium whitespace-nowrap"
-            >
-              초기화
-            </button>
-          </div>
-        </div>
-      </div>
+        <SearchField label="검색어" className="flex-1">
+          <SearchInputWithSelect
+            searchType={searchType}
+            searchValue={searchKeyword}
+            onSearchTypeChange={(value) => setSearchType(value as any)}
+            onSearchValueChange={setSearchKeyword}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            options={[
+              { value: 'userName', label: '회원명' },
+              { value: 'approvalNumber', label: '승인번호' },
+              { value: 'cardNumber', label: '카드번호' },
+            ]}
+          />
+        </SearchField>
+      </SearchSection>
 
       {/* 통계 정보 */}
-      <div className="grid grid-cols-4 gap-4 mb-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">머천트 잔액</div>
-          <div className="text-2xl font-bold text-primary-600">{formatNumber(merchantBalance)}원</div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-2 sm:p-4">
+          <div className="text-xs sm:text-sm text-gray-600 mb-1">머천트 잔액</div>
+          <div className="text-lg sm:text-2xl font-bold text-primary-600">{formatNumber(merchantBalance)}원</div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">승인금액 합계</div>
-          <div className="text-2xl font-bold text-gray-900">{formatNumber(totalAmount)}원</div>
+        <div className="bg-white rounded-lg border border-gray-200 p-2 sm:p-4">
+          <div className="text-xs sm:text-sm text-gray-600 mb-1">승인금액 합계</div>
+          <div className="text-lg sm:text-2xl font-bold text-gray-900">{formatNumber(totalAmount)}원</div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">수수료 합계</div>
-          <div className="text-2xl font-bold text-gray-900">{formatNumber(totalFee)}원</div>
+        <div className="bg-white rounded-lg border border-gray-200 p-2 sm:p-4">
+          <div className="text-xs sm:text-sm text-gray-600 mb-1">수수료 합계</div>
+          <div className="text-lg sm:text-2xl font-bold text-gray-900">{formatNumber(totalFee)}원</div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">정산금액 합계</div>
-          <div className="text-2xl font-bold text-green-600">{formatNumber(totalSettlementAmount)}원</div>
+        <div className="bg-white rounded-lg border border-gray-200 p-2 sm:p-4">
+          <div className="text-xs sm:text-sm text-gray-600 mb-1">정산금액 합계</div>
+          <div className="text-lg sm:text-2xl font-bold text-green-600">{formatNumber(totalSettlementAmount)}원</div>
         </div>
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm text-gray-600">
+      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="text-xs sm:text-sm text-gray-600">
           전체 <span className="font-semibold text-primary-600">{formatNumber(totalElements)}</span>건
         </div>
         <div className="flex items-center space-x-2">
@@ -367,19 +341,19 @@ export default function DeliveryWithdrawalsPage() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="text-gray-500">로딩 중...</div>
-        </div>
-      ) : (
-        <Table columns={columns} data={withdrawals} />
-      )}
+      <DataTable
+        columns={columns}
+        data={withdrawals}
+        emptyMessage="검색 결과가 없습니다."
+      />
 
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
+
+      <LoadingModal isOpen={isLoading} />
     </div>
   );
 }

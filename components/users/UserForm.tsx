@@ -90,6 +90,9 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
   const [rentAccountHolder, setRentAccountHolder] = useState('');
   const [rentApprovalStatus, setRentApprovalStatus] = useState<'NOT_APPLIED' | 'PENDING' | 'REJECTED' | 'APPROVED' | 'CANCELLED'>('NOT_APPLIED');
 
+  // 메모
+  const [memo, setMemo] = useState('');
+
   // 계좌 인증 상태
   const [deliveryAccountVerified, setDeliveryAccountVerified] = useState(false);
   const [deliveryAccountVerifying, setDeliveryAccountVerifying] = useState(false);
@@ -190,6 +193,9 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
       setRentAccountNumber(user.rentAccountNumber || '');
       setRentAccountHolder(user.rentAccountHolder || '');
       setRentApprovalStatus(user.rentApprovalStatus as 'NOT_APPLIED' | 'PENDING' | 'REJECTED' | 'APPROVED' | 'CANCELLED');
+
+      // 메모
+      setMemo(user.memo || '');
 
       // 기존 월세 계좌 정보 저장 (인증 완료된 것으로 간주)
       if (user.rentBankCode && user.rentAccountNumber) {
@@ -437,6 +443,11 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
       data.rentAccountHolder = rentAccountHolder;
       data.rentBankCode = rentBankCode;
       data.rentApprovalStatus = rentApprovalStatus;
+
+      // 메모
+      if (memo) {
+        data.memo = memo;
+      }
 
       if (userId) {
         await usersApi.update(userId, data);
@@ -1135,6 +1146,25 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
               </div>
             </div>
           )}
+        </div>
+
+        {/* 메모 섹션 */}
+        <div className="border-t pt-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            </svg>
+            메모
+          </h2>
+          <div>
+            <textarea
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              placeholder="메모를 입력하세요"
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm resize-none"
+            />
+          </div>
         </div>
 
         {/* 버튼 */}

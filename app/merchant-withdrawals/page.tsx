@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { merchantWithdrawalsApi } from '@/lib/api';
 import type { MerchantWithdrawalListItem, PaymentPurpose, WithdrawalStatus } from '@/types/api';
-import Table from '@/components/common/Table';
+import { DataTable } from '@/components/common/DataTable';
+import { LoadingModal } from '@/components/common/LoadingModal';
 import Pagination from '@/components/common/Pagination';
 import AlertModal from '@/components/common/AlertModal';
 import MerchantWithdrawalModal from '@/components/merchant-withdrawals/MerchantWithdrawalModal';
 import { formatDateTime, formatNumber, formatStatus } from '@/utils/format';
+import { SearchSection, SearchField, DateRange, RadioGroup, SearchInputWithSelect } from '@/components/common/SearchSection';
 
 export default function MerchantWithdrawalsPage() {
   const [withdrawals, setWithdrawals] = useState<MerchantWithdrawalListItem[]>([]);
@@ -145,58 +147,58 @@ export default function MerchantWithdrawalsPage() {
   };
 
   const columns = [
-    { key: 'no', label: 'NO', width: '80px', align: 'center' as const },
-    { key: 'requestDt', label: '요청일시', width: '180px', align: 'center' as const, render: (value: any) => formatDateTime(value) },
+    { key: 'no', header: 'NO', width: '80px', align: 'center' as const, render: (_row: MerchantWithdrawalListItem, index: number) => currentPage * pageSize + index + 1 },
+    { key: 'requestDt', header: '요청일시', width: '180px', align: 'center' as const, render: (row: MerchantWithdrawalListItem) => formatDateTime(row.requestDt) },
     {
       key: 'withdrawalStatus',
-      label: '출금상태',
+      header: '출금상태',
       width: '100px',
       align: 'center' as const,
-      render: (value: any) => (
+      render: (row: MerchantWithdrawalListItem) => (
         <span
           className={`px-2 py-1 rounded text-xs font-medium ${
-            value === 'SUCCESS'
+            row.withdrawalStatus === 'SUCCESS'
               ? 'bg-blue-100 text-blue-800'
-              : value === 'FAILED'
+              : row.withdrawalStatus === 'FAILED'
               ? 'bg-red-100 text-red-800'
               : 'bg-yellow-100 text-yellow-800'
           }`}
         >
-          {formatStatus(value)}
+          {formatStatus(row.withdrawalStatus)}
         </span>
       ),
     },
-    { key: 'depositorName', label: '입금자명', width: '200px', align: 'center' as const },
-    { key: 'transferMemo', label: '이체내역', width: '250px', align: 'center' as const },
+    { key: 'depositorName', header: '입금자명', width: '200px', align: 'center' as const },
+    { key: 'transferMemo', header: '이체내역', width: '250px', align: 'center' as const },
     {
       key: 'withdrawalAmount',
-      label: '출금금액',
+      header: '출금금액',
       width: '120px',
       align: 'center' as const,
-      render: (value: any) => formatNumber(value),
+      render: (row: MerchantWithdrawalListItem) => formatNumber(row.withdrawalAmount),
     },
     {
       key: 'merchantBalance',
-      label: '머천트잔액',
+      header: '머천트잔액',
       width: '120px',
       align: 'center' as const,
-      render: (value: any) => (value !== null ? formatNumber(value) : '-'),
+      render: (row: MerchantWithdrawalListItem) => (row.merchantBalance !== null ? formatNumber(row.merchantBalance) : '-'),
     },
     {
       key: 'bankCode',
-      label: '은행명',
+      header: '은행명',
       width: '100px',
       align: 'center' as const,
-      render: (value: any) => getBankName(value),
+      render: (row: MerchantWithdrawalListItem) => getBankName(row.bankCode),
     },
-    { key: 'accountNumber', label: '계좌번호', width: '200px', align: 'center' as const },
-    { key: 'accountHolder', label: '예금주', width: '120px', align: 'center' as const },
+    { key: 'accountNumber', header: '계좌번호', width: '200px', align: 'center' as const },
+    { key: 'accountHolder', header: '예금주', width: '120px', align: 'center' as const },
     {
       key: 'resultMessage',
-      label: '결과메시지',
+      header: '결과메시지',
       width: 'auto',
       align: 'center' as const,
-      render: (value: any, row: any) => {
+      render: (row: MerchantWithdrawalListItem) => {
         const message = row.historyResultMessage || row.requestResultMessage || '-';
         return <span className="text-sm">{message}</span>;
       },
@@ -205,9 +207,9 @@ export default function MerchantWithdrawalsPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-          <svg className="w-7 h-7 mr-2" fill="currentColor" viewBox="0 0 20 20">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+          <svg className="w-6 h-6 sm:w-7 sm:h-7 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
             <path
               fillRule="evenodd"
@@ -220,26 +222,26 @@ export default function MerchantWithdrawalsPage() {
       </div>
 
       {/* 결제 유형 선택 카드 */}
-      <div className="mb-4 flex gap-4">
+      <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4">
         <button
           onClick={() => {
             setPaymentPurpose('DELIVERY_CHARGE');
             setCurrentPage(0);
           }}
-          className={`w-1/5 p-4 rounded-lg border-2 transition-all ${
+          className={`w-full sm:w-1/2 lg:w-1/5 p-3 sm:p-4 rounded-lg border-2 transition-all ${
             paymentPurpose === 'DELIVERY_CHARGE'
               ? 'border-blue-500 bg-blue-50 shadow-md'
               : 'border-gray-200 bg-white hover:border-gray-300'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div
-                className={`p-3 rounded-full ${
+                className={`p-2 sm:p-3 rounded-full ${
                   paymentPurpose === 'DELIVERY_CHARGE' ? 'bg-blue-100' : 'bg-gray-100'
                 }`}
               >
-                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -250,18 +252,18 @@ export default function MerchantWithdrawalsPage() {
               </div>
               <div className="text-left">
                 <p
-                  className={`text-lg font-bold ${
+                  className={`text-base sm:text-lg font-bold ${
                     paymentPurpose === 'DELIVERY_CHARGE' ? 'text-blue-600' : 'text-gray-700'
                   }`}
                 >
                   배달비
                 </p>
-                <p className="text-sm text-gray-500">D+0 계좌</p>
+                <p className="text-xs sm:text-sm text-gray-500">D+0 계좌</p>
               </div>
             </div>
             {paymentPurpose === 'DELIVERY_CHARGE' && (
-              <div className="flex items-center justify-center w-8 h-8 bg-blue-500 rounded-full">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-full flex-shrink-0">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -278,20 +280,20 @@ export default function MerchantWithdrawalsPage() {
             setPaymentPurpose('MONTHLY_RENT');
             setCurrentPage(0);
           }}
-          className={`w-1/5 p-4 rounded-lg border-2 transition-all ${
+          className={`w-full sm:w-1/2 lg:w-1/5 p-3 sm:p-4 rounded-lg border-2 transition-all ${
             paymentPurpose === 'MONTHLY_RENT'
               ? 'border-green-500 bg-green-50 shadow-md'
               : 'border-gray-200 bg-white hover:border-gray-300'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div
-                className={`p-3 rounded-full ${
+                className={`p-2 sm:p-3 rounded-full ${
                   paymentPurpose === 'MONTHLY_RENT' ? 'bg-green-100' : 'bg-gray-100'
                 }`}
               >
-                <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -302,18 +304,18 @@ export default function MerchantWithdrawalsPage() {
               </div>
               <div className="text-left">
                 <p
-                  className={`text-lg font-bold ${
+                  className={`text-base sm:text-lg font-bold ${
                     paymentPurpose === 'MONTHLY_RENT' ? 'text-green-600' : 'text-gray-700'
                   }`}
                 >
                   월세
                 </p>
-                <p className="text-sm text-gray-500">D+1 계좌</p>
+                <p className="text-xs sm:text-sm text-gray-500">D+1 계좌</p>
               </div>
             </div>
             {paymentPurpose === 'MONTHLY_RENT' && (
-              <div className="flex items-center justify-center w-8 h-8 bg-green-500 rounded-full">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <div className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-full flex-shrink-0">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -327,138 +329,68 @@ export default function MerchantWithdrawalsPage() {
       </div>
 
       {/* 검색 조건 영역 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
-        <div className="grid grid-cols-2 gap-4">
-          {/* 첫 번째 줄 */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">요청일</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                disabled={dateType === 'all'}
-                className="px-3 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-500"
-              />
-              <span className="text-gray-500">~</span>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                disabled={dateType === 'all'}
-                className="px-3 py-1.5 border border-gray-300 rounded text-sm disabled:bg-gray-100 disabled:text-gray-500"
-              />
-            </div>
-            <label className="flex items-center gap-1">
+      <SearchSection>
+        <SearchField label="요청일" className="flex-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+            <DateRange
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onDateFromChange={setDateFrom}
+              onDateToChange={setDateTo}
+              disabled={dateType === 'all'}
+            />
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={dateType === 'all'}
                 onChange={(e) => setDateType(e.target.checked ? 'all' : 'range')}
-                className="w-4 h-4"
+                className="w-4 h-4 text-blue-600"
               />
-              <span className="text-sm">전체</span>
+              <span className="text-sm text-gray-700 whitespace-nowrap">전체</span>
             </label>
           </div>
+        </SearchField>
 
-          {/* 두 번째 줄 */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">출금상태</label>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={withdrawalStatus === 'ALL'}
-                  onChange={() => setWithdrawalStatus('ALL')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">전체</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={withdrawalStatus === 'SUCCESS'}
-                  onChange={() => setWithdrawalStatus('SUCCESS')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">완료</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={withdrawalStatus === 'PENDING'}
-                  onChange={() => setWithdrawalStatus('PENDING')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">대기</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={withdrawalStatus === 'FAILED'}
-                  onChange={() => setWithdrawalStatus('FAILED')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">실패</span>
-              </label>
-            </div>
-          </div>
+        <SearchField label="출금상태" className="flex-1">
+          <RadioGroup
+            name="withdrawalStatus"
+            value={withdrawalStatus}
+            onChange={(value) => setWithdrawalStatus(value as any)}
+            options={[
+              { value: 'ALL', label: '전체' },
+              { value: 'SUCCESS', label: '완료' },
+              { value: 'PENDING', label: '대기' },
+              { value: 'FAILED', label: '실패' },
+            ]}
+          />
+        </SearchField>
 
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">검색조건</label>
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={searchType === 'accountHolder'}
-                  onChange={() => setSearchType('accountHolder')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">예금주</span>
-              </label>
-              <label className="flex items-center gap-1">
-                <input
-                  type="radio"
-                  checked={searchType === 'accountNumber'}
-                  onChange={() => setSearchType('accountNumber')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">계좌번호</span>
-              </label>
-            </div>
-            <input
-              type="text"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="검색어를 입력해 주세요."
-              className="px-3 py-1.5 border border-gray-300 rounded text-sm flex-1"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <button
-              onClick={handleSearch}
-              className="px-6 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded text-sm font-medium whitespace-nowrap"
-            >
-              검색
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-6 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-sm font-medium whitespace-nowrap"
-            >
-              초기화
-            </button>
-          </div>
-        </div>
-      </div>
+        <SearchField label="검색어" className="flex-1">
+          <SearchInputWithSelect
+            searchType={searchType}
+            searchValue={searchKeyword}
+            onSearchTypeChange={(value) => setSearchType(value as any)}
+            onSearchValueChange={setSearchKeyword}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            options={[
+              { value: 'accountHolder', label: '예금주' },
+              { value: 'accountNumber', label: '계좌번호' },
+            ]}
+          />
+        </SearchField>
+      </SearchSection>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-2 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">머천트 잔액</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">{formatNumber(merchantBalance)}원</p>
+              <p className="text-xs sm:text-sm text-gray-600">머천트 잔액</p>
+              <p className="text-lg sm:text-2xl font-bold text-blue-600 mt-1">{formatNumber(merchantBalance)}원</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <div className="p-2 sm:p-3 bg-blue-100 rounded-full">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
                 <path
                   fillRule="evenodd"
@@ -470,14 +402,14 @@ export default function MerchantWithdrawalsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-2 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">총 출금 금액</p>
-              <p className="text-2xl font-bold text-green-600 mt-1">{formatNumber(totalWithdrawalAmount)}원</p>
+              <p className="text-xs sm:text-sm text-gray-600">총 출금 금액</p>
+              <p className="text-lg sm:text-2xl font-bold text-green-600 mt-1">{formatNumber(totalWithdrawalAmount)}원</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2 sm:p-3 bg-green-100 rounded-full">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -490,9 +422,9 @@ export default function MerchantWithdrawalsPage() {
         </div>
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="text-sm text-gray-600">
+      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+          <div className="text-xs sm:text-sm text-gray-600">
             전체 <span className="font-semibold text-primary-600">{formatNumber(totalElements)}</span>건
           </div>
           <button
@@ -523,15 +455,15 @@ export default function MerchantWithdrawalsPage() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="text-gray-500">로딩 중...</div>
-        </div>
-      ) : (
-        <Table columns={columns} data={withdrawals} />
-      )}
+      <DataTable
+        columns={columns}
+        data={withdrawals}
+        emptyMessage="검색 결과가 없습니다."
+      />
 
       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+
+      <LoadingModal isOpen={isLoading} />
 
       {/* 출금 요청 모달 */}
       <MerchantWithdrawalModal

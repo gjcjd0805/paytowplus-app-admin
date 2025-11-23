@@ -14,9 +14,11 @@
   "license": "ISC",
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-font": "^47.2.0",
     "@ckeditor/ckeditor5-image": "^47.2.0",
     "@ckeditor/ckeditor5-react": "^11.0.0",
     "@ckeditor/ckeditor5-upload": "^47.2.0",
+    "@tanstack/react-table": "^8.21.3",
     "ckeditor5": "^47.2.0",
     "ckeditor5-custom-build": "^0.0.6",
     "next": "^16.0.1",

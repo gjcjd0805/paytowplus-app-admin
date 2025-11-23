@@ -10,7 +10,8 @@
       "Bash(./gradlew build:*)",
       "Bash(netstat:*)",
       "Bash(taskkill //F //PID 38308)",
-      "Bash(java -jar:*)"
+      "Bash(java -jar:*)",
+      "Bash(powershell -Command \"(Get-Content ''app\\withdrawals\\delivery\\page.tsx'') -replace ''import Table from'', ''import { DataTable } from'' -replace ''@/components/common/Table'', ''@/components/common/DataTable'' | Out-File -Encoding UTF8 ''app\\withdrawals\\delivery\\page.tmp.tsx'' && Move-Item -Force ''app\\withdrawals\\delivery\\page.tmp.tsx'' ''app\\withdrawals\\delivery\\page.tsx''\")"
     ],
     "deny": [],
     "ask": []

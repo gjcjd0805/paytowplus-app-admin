@@ -21,6 +21,7 @@ export const rentApplicationsApi = {
   getDocuments: async (params?: RentApplicationSearchParams): Promise<RentApplicationListResponse> => {
     const queryParams = new URLSearchParams();
 
+    if (params?.centerId !== undefined) queryParams.append('centerId', params.centerId.toString());
     if (params?.page !== undefined) queryParams.append('page', params.page.toString());
     if (params?.size !== undefined) queryParams.append('size', params.size.toString());
     if (params?.status) queryParams.append('status', params.status);

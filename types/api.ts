@@ -67,6 +67,7 @@ export interface AdminUserUpdateRequest {
 }
 
 export interface AdminUserListItem {
+  id: number;
   no: number;
   registDt: string;
   loginId: string;
@@ -132,6 +133,7 @@ export interface User {
   rentApprovalStatus: string;
   rentApprovedDt: string | null;
 
+  memo?: string;
   registDt: string;
   updateDt: string;
 }
@@ -172,6 +174,8 @@ export interface UserCreateRequest {
   rentAccountHolder?: string;
   rentBankCode?: string;
   rentApprovalStatus?: RentApprovalStatus;
+
+  memo?: string;
 }
 
 export interface UserUpdateRequest {
@@ -208,6 +212,8 @@ export interface UserUpdateRequest {
   rentAccountHolder?: string;
   rentBankCode?: string;
   rentApprovalStatus?: RentApprovalStatus;
+
+  memo?: string;
 }
 
 export interface UserListItem {
@@ -243,6 +249,7 @@ export interface UserSearchParams {
   registDateTo?: string;
   loginId?: string;
   userName?: string;
+  phoneNumber?: string;
 }
 
 // ========== 결제 관련 타입 ==========
@@ -391,6 +398,7 @@ export interface RentApplicationListResponse {
 }
 
 export interface RentApplicationSearchParams {
+  centerId: number;
   page?: number;
   size?: number;
   status?: RentApprovalStatus;
