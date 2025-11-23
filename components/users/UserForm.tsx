@@ -93,6 +93,18 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
   // 메모
   const [memo, setMemo] = useState('');
 
+  // 터미널 코드
+  const [terminalCode, setTerminalCode] = useState('');
+  const [copiedTerminalCode, setCopiedTerminalCode] = useState(false);
+
+  const handleCopyTerminalCode = () => {
+    if (terminalCode) {
+      navigator.clipboard.writeText(terminalCode);
+      setCopiedTerminalCode(true);
+      setTimeout(() => setCopiedTerminalCode(false), 2000);
+    }
+  };
+
   // 계좌 인증 상태
   const [deliveryAccountVerified, setDeliveryAccountVerified] = useState(false);
   const [deliveryAccountVerifying, setDeliveryAccountVerifying] = useState(false);
@@ -196,6 +208,9 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
 
       // 메모
       setMemo(user.memo || '');
+
+      // 터미널 코드
+      setTerminalCode(user.terminalCode || '');
 
       // 기존 월세 계좌 정보 저장 (인증 완료된 것으로 간주)
       if (user.rentBankCode && user.rentAccountNumber) {
@@ -661,7 +676,7 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
             </div>
 
             {/* 두 번째 줄 */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-3">
               {/* 회원상태 */}
               <div className="w-40">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -715,6 +730,70 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
                   />
                   <span className="ml-1.5 text-sm text-gray-700">결제자명 변동가능</span>
                 </label>
+              </div>
+            </div>
+
+            {/* 터미널 코드 & 메모 */}
+            <div className="flex gap-4">
+              {/* 터미널 코드 (수정 모드일 때만) */}
+              {userId && terminalCode && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center mb-2">
+                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                    </svg>
+                    <h3 className="text-sm font-semibold text-gray-900">터미널 코드</h3>
+                  </div>
+                  <p className="text-xs text-gray-600 mb-3">
+                    터미널 코드로 웹 정산 어드민과 결제 및 정산 연동이 가능합니다.
+                  </p>
+                  <div className="bg-gray-900 rounded-lg px-4 py-3 font-mono text-sm flex items-center gap-4">
+                    <code className="text-green-400 font-semibold">{terminalCode}</code>
+                    <button
+                      type="button"
+                      onClick={handleCopyTerminalCode}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+                        copiedTerminalCode
+                          ? 'bg-green-600 text-white'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      {copiedTerminalCode ? (
+                        <>
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          복사됨
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                          </svg>
+                          복사
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 메모 */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 w-96">
+                <div className="flex items-center mb-2">
+                  <svg className="w-5 h-5 mr-2 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                  <h3 className="text-sm font-semibold text-gray-900">메모</h3>
+                </div>
+                <textarea
+                  value={memo}
+                  onChange={(e) => setMemo(e.target.value)}
+                  placeholder="메모를 입력하세요"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded bg-white focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm resize-none"
+                />
               </div>
             </div>
           </div>
@@ -1148,24 +1227,6 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
           )}
         </div>
 
-        {/* 메모 섹션 */}
-        <div className="border-t pt-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-            </svg>
-            메모
-          </h2>
-          <div>
-            <textarea
-              value={memo}
-              onChange={(e) => setMemo(e.target.value)}
-              placeholder="메모를 입력하세요"
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm resize-none"
-            />
-          </div>
-        </div>
 
         {/* 버튼 */}
         <div className="flex justify-center space-x-3 pt-6 border-t">
