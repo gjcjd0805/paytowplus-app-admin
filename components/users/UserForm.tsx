@@ -522,219 +522,229 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
       />
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* 기본 정보 섹션 */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-            </svg>
-            기본 정보
-          </h2>
+        {/* 좌우 레이아웃 */}
+        <div className="flex gap-8">
+          {/* 왼쪽: 기본 정보 */}
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+              </svg>
+              기본 정보
+            </h2>
 
-          <div>
-            {/* 첫 번째 줄 */}
-            <div className="flex gap-3 mb-3">
-              {/* 아이디 */}
-              <div className="w-40">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  아이디 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={loginId}
-                  onChange={(e) => setLoginId(e.target.value)}
-                  placeholder="아이디"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                  readOnly={!!userId}
-                  disabled={!!userId}
-                  required={!userId}
-                />
-              </div>
-
-              {/* 비밀번호 */}
-              <div className="w-40">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  비밀번호 {!userId && <span className="text-red-500">*</span>}
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={userId ? '변경 시만 입력' : '비밀번호'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                  required={!userId}
-                />
-              </div>
-
-              {/* 회원명 */}
-              <div className="w-32">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  회원명 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder="회원명"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                  required
-                />
-              </div>
-
-              {/* 연락처 */}
-              <div className="w-40">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  연락처 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9]/g, '');
-                    if (value.length <= 11) {
-                      setPhoneNumber(value);
-                    }
-                  }}
-                  placeholder="01012345678"
-                  maxLength={11}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                  required
-                />
-              </div>
-
-              {/* 건당한도금액 */}
-              <div className="w-40">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  건당한도 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formatNumber(perLimitPrice)}
-                  onChange={(e) => setPerLimitPrice(e.target.value.replace(/,/g, ''))}
-                  placeholder="1,000,000"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                  required
-                />
-              </div>
-
-              {/* 일일한도금액 */}
-              <div className="w-40">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  일일한도 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formatNumber(dailyLimitPrice)}
-                  onChange={(e) => setDailyLimitPrice(e.target.value.replace(/,/g, ''))}
-                  placeholder="1,000,000"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                  required
-                />
-              </div>
-
-              {/* 연간한도금액 */}
-              <div className="w-44">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  연간한도 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formatNumber(annualLimitPrice)}
-                  onChange={(e) => setAnnualLimitPrice(e.target.value.replace(/,/g, ''))}
-                  placeholder="100,000,000"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                  required
-                />
-              </div>
-
-              {/* 허용할부개월 */}
-              <div className="w-32">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  허용할부 <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={allowedInstallmentMonths}
-                  onChange={(e) => setAllowedInstallmentMonths(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                  required
-                >
-                  <option value="0">일시불</option>
-                  <option value="1">1개월</option>
-                  <option value="2">2개월</option>
-                  <option value="3">3개월</option>
-                  <option value="4">4개월</option>
-                  <option value="5">5개월</option>
-                  <option value="6">6개월</option>
-                  <option value="7">7개월</option>
-                  <option value="8">8개월</option>
-                  <option value="9">9개월</option>
-                  <option value="10">10개월</option>
-                  <option value="11">11개월</option>
-                  <option value="12">12개월</option>
-                </select>
-              </div>
-            </div>
-
-            {/* 두 번째 줄 */}
-            <div className="flex gap-3 mb-3">
-              {/* 회원상태 */}
-              <div className="w-40">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  회원상태 <span className="text-red-500">*</span>
-                </label>
-                <div className="flex items-center space-x-3">
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={userStatus === 'ACTIVE'}
-                      onChange={() => setUserStatus('ACTIVE')}
-                      className="w-4 h-4 text-primary-600 focus:ring-1 focus:ring-primary-500"
-                    />
-                    <span className="ml-1.5 text-sm text-gray-700">활성</span>
+            <div className="space-y-3">
+              {/* 첫 번째 줄: 아이디, 비밀번호 */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* 아이디 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    아이디 <span className="text-red-500">*</span>
                   </label>
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      type="radio"
-                      checked={userStatus === 'TERMINATED'}
-                      onChange={() => setUserStatus('TERMINATED')}
-                      className="w-4 h-4 text-primary-600 focus:ring-1 focus:ring-primary-500"
-                    />
-                    <span className="ml-1.5 text-sm text-gray-700">해지</span>
+                  <input
+                    type="text"
+                    value={loginId}
+                    onChange={(e) => setLoginId(e.target.value)}
+                    placeholder="아이디"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                    readOnly={!!userId}
+                    disabled={!!userId}
+                    required={!userId}
+                  />
+                </div>
+
+                {/* 비밀번호 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    비밀번호 {!userId && <span className="text-red-500">*</span>}
                   </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={userId ? '변경 시만 입력' : '비밀번호'}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                    required={!userId}
+                  />
                 </div>
               </div>
 
-              {/* 상품명 변동 가능 여부 */}
-              <div className="w-36">
-                <label className="block text-sm font-medium text-gray-700 mb-1">&nbsp;</label>
-                <label className="flex items-center cursor-pointer">
+              {/* 두 번째 줄: 회원명, 연락처, 회원상태 */}
+              <div className="grid grid-cols-3 gap-3">
+                {/* 회원명 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    회원명 <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    type="checkbox"
-                    checked={isProductNameMutable}
-                    onChange={(e) => setIsProductNameMutable(e.target.checked)}
-                    className="w-4 h-4 text-primary-600 focus:ring-1 focus:ring-primary-500 rounded"
+                    type="text"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    placeholder="회원명"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                    required
                   />
-                  <span className="ml-1.5 text-sm text-gray-700">상품명 변동가능</span>
-                </label>
+                </div>
+
+                {/* 연락처 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    연락처 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      if (value.length <= 11) {
+                        setPhoneNumber(value);
+                      }
+                    }}
+                    placeholder="01012345678"
+                    maxLength={11}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                    required
+                  />
+                </div>
+
+                {/* 회원상태 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    회원상태 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex items-center space-x-3 h-10">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={userStatus === 'ACTIVE'}
+                        onChange={() => setUserStatus('ACTIVE')}
+                        className="w-4 h-4 text-primary-600 focus:ring-1 focus:ring-primary-500"
+                      />
+                      <span className="ml-1.5 text-sm text-gray-700">활성</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={userStatus === 'TERMINATED'}
+                        onChange={() => setUserStatus('TERMINATED')}
+                        className="w-4 h-4 text-primary-600 focus:ring-1 focus:ring-primary-500"
+                      />
+                      <span className="ml-1.5 text-sm text-gray-700">해지</span>
+                    </label>
+                  </div>
+                </div>
               </div>
 
-              {/* 결제자명 변동 가능 여부 */}
-              <div className="w-40">
-                <label className="block text-sm font-medium text-gray-700 mb-1">&nbsp;</label>
-                <label className="flex items-center cursor-pointer">
+              {/* 세 번째 줄: 건당한도, 일일한도, 연간한도 */}
+              <div className="grid grid-cols-3 gap-3">
+                {/* 건당한도금액 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    건당한도 <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    type="checkbox"
-                    checked={isPayerNameMutable}
-                    onChange={(e) => setIsPayerNameMutable(e.target.checked)}
-                    className="w-4 h-4 text-primary-600 focus:ring-1 focus:ring-primary-500 rounded"
+                    type="text"
+                    value={formatNumber(perLimitPrice)}
+                    onChange={(e) => setPerLimitPrice(e.target.value.replace(/,/g, ''))}
+                    placeholder="1,000,000"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                    required
                   />
-                  <span className="ml-1.5 text-sm text-gray-700">결제자명 변동가능</span>
-                </label>
-              </div>
-            </div>
+                </div>
 
-            {/* 터미널 코드 & 메모 */}
-            <div className="flex gap-4">
+                {/* 일일한도금액 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    일일한도 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formatNumber(dailyLimitPrice)}
+                    onChange={(e) => setDailyLimitPrice(e.target.value.replace(/,/g, ''))}
+                    placeholder="1,000,000"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                    required
+                  />
+                </div>
+
+                {/* 연간한도금액 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    연간한도 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formatNumber(annualLimitPrice)}
+                    onChange={(e) => setAnnualLimitPrice(e.target.value.replace(/,/g, ''))}
+                    placeholder="100,000,000"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* 네 번째 줄: 허용할부, 상품명 변동가능, 결제자명 변동가능 */}
+              <div className="grid grid-cols-3 gap-3">
+                {/* 허용할부개월 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    허용할부 <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={allowedInstallmentMonths}
+                    onChange={(e) => setAllowedInstallmentMonths(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                    required
+                  >
+                    <option value="0">일시불</option>
+                    <option value="1">1개월</option>
+                    <option value="2">2개월</option>
+                    <option value="3">3개월</option>
+                    <option value="4">4개월</option>
+                    <option value="5">5개월</option>
+                    <option value="6">6개월</option>
+                    <option value="7">7개월</option>
+                    <option value="8">8개월</option>
+                    <option value="9">9개월</option>
+                    <option value="10">10개월</option>
+                    <option value="11">11개월</option>
+                    <option value="12">12개월</option>
+                  </select>
+                </div>
+
+                {/* 상품명 변동가능 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">상품명 변동</label>
+                  <div className="flex items-center h-10">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isProductNameMutable}
+                        onChange={(e) => setIsProductNameMutable(e.target.checked)}
+                        className="w-4 h-4 text-primary-600 focus:ring-1 focus:ring-primary-500 rounded"
+                      />
+                      <span className="ml-1.5 text-sm text-gray-700">변동가능</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* 결제자명 변동가능 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">결제자명 변동</label>
+                  <div className="flex items-center h-10">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isPayerNameMutable}
+                        onChange={(e) => setIsPayerNameMutable(e.target.checked)}
+                        className="w-4 h-4 text-primary-600 focus:ring-1 focus:ring-primary-500 rounded"
+                      />
+                      <span className="ml-1.5 text-sm text-gray-700">변동가능</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               {/* 터미널 코드 (수정 모드일 때만) */}
               {userId && terminalCode && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -780,7 +790,7 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
               )}
 
               {/* 메모 */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 w-96">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center mb-2">
                   <svg className="w-5 h-5 mr-2 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -797,17 +807,16 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* 배달비/월세 섹션 */}
-        <div className="border-t pt-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-            <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-              <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-            </svg>
-            결제 정보
-          </h2>
+          {/* 오른쪽: 결제 정보 */}
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+              </svg>
+              결제 정보
+            </h2>
 
           {/* 탭 버튼 */}
           <div className="flex border-b border-gray-200 mb-6">
@@ -1225,8 +1234,8 @@ export default function UserForm({ userId, onClose }: UserFormProps) {
               </div>
             </div>
           )}
+          </div>
         </div>
-
 
         {/* 버튼 */}
         <div className="flex justify-center space-x-3 pt-6 border-t">
