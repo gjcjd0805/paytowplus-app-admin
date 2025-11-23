@@ -19,11 +19,11 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-gray-50 overflow-hidden">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden lg:ml-64">
-          <Header />
-          <main className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6">
+      <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+        <Header />
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 lg:ml-64">
             {children}
           </main>
         </div>

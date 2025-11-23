@@ -68,7 +68,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-gradient-to-r from-white to-pastel-blue h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6 shadow-sm">
+    <header className="bg-gradient-to-r from-white to-pastel-blue h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6 shadow-sm z-50 relative">
       {/* 모바일 메뉴 버튼 */}
       <button
         onClick={toggleSidebar}
@@ -79,6 +79,35 @@ export default function Header() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
+
+      {/* 센터 선택 드롭다운 */}
+      <div className="flex items-center justify-center mx-4">
+        <div className="relative" style={{ minWidth: '200px', maxWidth: '280px' }}>
+          <select
+            value={selectedCenter?.centerId || ''}
+            onChange={(e) => {
+              const center = centers.find(c => c.centerId === Number(e.target.value));
+              if (center) handleCenterChange(center);
+            }}
+            className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white px-5 py-2.5 pr-10 rounded-super-cute text-base font-bold hover:from-primary-600 hover:to-primary-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-300"
+          >
+            {centers.length === 0 ? (
+              <option value="">센터를 불러오는 중...</option>
+            ) : (
+              centers.map((center) => (
+                <option key={center.centerId} value={center.centerId} className="bg-white text-gray-700">
+                  {center.name}
+                </option>
+              ))
+            )}
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </div>
+        </div>
+      </div>
 
       <div className="flex items-center space-x-2 sm:space-x-4">
         <div className="relative">

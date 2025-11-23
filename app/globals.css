@@ -46,4 +46,15 @@
   .input-cute {
     @apply rounded-xl border-2 focus:ring-2 transition-all duration-200;
   }
+
+  /* 사이드바 높이 조정 */
+  aside {
+    height: calc(100vh - 3.5rem);
+  }
+
+  @media (min-width: 640px) {
+    aside {
+      height: calc(100vh - 4rem);
+    }
+  }
 }

@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { centersApi } from '@/lib/api';
-import type { Center } from '@/types/api';
 import { useSidebar } from '@/lib/contexts/SidebarContext';
 
 interface MenuItem {
@@ -148,36 +146,7 @@ const menuItems: MenuItem[] = [
 export default function Sidebar() {
   const { sidebarOpen, closeSidebar } = useSidebar();
   const pathname = usePathname();
-  const [centerName, setCenterName] = useState('pay++');
-  const [centers, setCenters] = useState<Center[]>([]);
-  const [selectedCenter, setSelectedCenter] = useState<Center | null>(null);
-  const [showCenterMenu, setShowCenterMenu] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
-
-  useEffect(() => {
-    // 초기 로드 시 센터명 설정
-    const loadCenterName = () => {
-      const storedCenter = JSON.parse(localStorage.getItem('selectedCenter') || '{}');
-      setCenterName(storedCenter.centerName || storedCenter.name || 'pay++');
-      setSelectedCenter(storedCenter);
-    };
-
-    loadCenterName();
-    loadCenters();
-
-    // 센터 변경 이벤트 리스너 등록
-    const handleCenterChanged = () => {
-      loadCenterName();
-    };
-
-    window.addEventListener('centerChanged', handleCenterChanged);
-    window.addEventListener('storage', handleCenterChanged);
-
-    return () => {
-      window.removeEventListener('centerChanged', handleCenterChanged);
-      window.removeEventListener('storage', handleCenterChanged);
-    };
-  }, []);
 
   useEffect(() => {
     // 결제관리, 회원출금관리, 신청 관리는 항상 펼쳐진 상태 유지
@@ -195,36 +164,6 @@ export default function Sidebar() {
 
     setExpandedMenus(newExpandedMenus);
   }, [pathname]);
-
-  const loadCenters = async () => {
-    try {
-      const response = await centersApi.list();
-      setCenters(response.centers);
-
-      // 선택된 센터가 없으면 첫 번째 센터 선택
-      const storedCenter = localStorage.getItem('selectedCenter');
-      if (!storedCenter && response.centers.length > 0) {
-        handleCenterChange(response.centers[0]);
-      }
-    } catch (error) {
-      console.error('센터 목록 로드 실패:', error);
-    }
-  };
-
-  const handleCenterChange = (center: Center) => {
-    const centerData = {
-      centerId: center.centerId,
-      centerName: center.name,
-      name: center.name,
-      pgCode: center.pgCode,
-      recurringMid: center.recurringMid,
-      manualMid: center.manualMid,
-    };
-
-    localStorage.setItem('selectedCenter', JSON.stringify(centerData));
-    setSelectedCenter(center);
-    window.location.reload(); // 페이지 새로고침하여 센터 변경 반영
-  };
 
   const toggleMenu = (path: string) => {
     setExpandedMenus(prev =>
@@ -254,13 +193,15 @@ export default function Sidebar() {
       )}
 
       {/* 사이드바 */}
-      <aside className={`
-        fixed left-0 top-0 z-50 w-64 bg-gradient-to-b from-white to-pastel-blue h-screen shadow-lg
-        transition-transform duration-300 ease-in-out
-        lg:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-      <div className="px-6 pt-12 pb-6 h-full overflow-y-auto">
+      <aside
+        className={`
+          fixed left-0 top-14 sm:top-16 z-40 w-64 bg-gradient-to-b from-white to-pastel-blue shadow-lg
+          transition-transform duration-300 ease-in-out
+          lg:translate-x-0
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+      <div className="px-6 pt-6 pb-6 h-full overflow-y-auto">
         {/* 모바일 닫기 버튼 */}
         <div className="lg:hidden flex justify-end mb-4">
           <button
@@ -272,47 +213,6 @@ export default function Sidebar() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-        </div>
-
-        {/* 센터 선택 */}
-        <div className="relative mb-8 sm:mb-12 lg:mb-16">
-          <button
-            onClick={() => setShowCenterMenu(!showCenterMenu)}
-            className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white px-5 py-3 rounded-super-cute text-lg font-bold hover:from-primary-600 hover:to-primary-700 transition-all duration-300 flex items-center justify-between shadow-lg hover:shadow-xl transform hover:scale-105"
-          >
-            <span>{centerName}</span>
-            <svg
-              className={`w-5 h-5 transition-transform ${showCenterMenu ? 'rotate-180' : ''}`}
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-
-          {showCenterMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowCenterMenu(false)}
-              />
-              <div className="absolute left-0 right-0 mt-2 bg-white rounded-cute shadow-xl border-2 border-primary-200 py-2 z-20 max-h-60 overflow-y-auto">
-                {centers.map((center) => (
-                  <button
-                    key={center.centerId}
-                    onClick={() => handleCenterChange(center)}
-                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-pastel-pink transition-all duration-200 rounded-lg mx-2 my-1 ${
-                      selectedCenter?.centerId === center.centerId
-                        ? 'bg-gradient-to-r from-primary-100 to-primary-200 text-primary-700 font-bold shadow-sm'
-                        : 'text-gray-700'
-                    }`}
-                  >
-                    {center.name}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
         </div>
 
         {/* 메뉴 */}
