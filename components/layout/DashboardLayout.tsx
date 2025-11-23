@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { SidebarProvider } from '@/lib/contexts/SidebarContext';
+import { CenterProvider } from '@/lib/contexts/CenterContext';
 
 export default function DashboardLayout({
   children,
@@ -18,16 +19,18 @@ export default function DashboardLayout({
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
-        <Header />
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 lg:ml-64">
-            {children}
-          </main>
+    <CenterProvider>
+      <SidebarProvider>
+        <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+          <Header />
+          <div className="flex flex-1 overflow-hidden">
+            <Sidebar />
+            <main className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 lg:ml-64">
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </CenterProvider>
   );
 }

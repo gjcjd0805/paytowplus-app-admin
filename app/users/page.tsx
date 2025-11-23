@@ -9,9 +9,11 @@ import Pagination from '@/components/common/Pagination';
 import { useRouter } from 'next/navigation';
 import { formatDateTime, formatNumber, formatStatus } from '@/utils/format';
 import { SearchSection, SearchField, DateRange, RadioGroup, SearchInputWithSelect } from '@/components/common/SearchSection';
+import { useCenter } from '@/lib/contexts/CenterContext';
 
 export default function UsersPage() {
   const router = useRouter();
+  const { selectedCenter } = useCenter();
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -37,13 +39,14 @@ export default function UsersPage() {
 
   useEffect(() => {
     loadUsers();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, selectedCenter]);
 
   const loadUsers = async () => {
+    if (!selectedCenter?.centerId) return;
+
     setIsLoading(true);
     try {
-      const centerId = JSON.parse(localStorage.getItem('selectedCenter') || '{}')?.centerId;
-      if (!centerId) return;
+      const centerId = selectedCenter.centerId;
 
       const params: any = {
         centerId,

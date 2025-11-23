@@ -8,8 +8,10 @@ import { LoadingModal } from '@/components/common/LoadingModal';
 import Pagination from '@/components/common/Pagination';
 import { formatDateTime, formatNumber, formatStatus } from '@/utils/format';
 import { SearchSection, SearchField, DateRange, RadioGroup, SearchInputWithSelect } from '@/components/common/SearchSection';
+import { useCenter } from '@/lib/contexts/CenterContext';
 
 export default function DeliveryPaymentsPage() {
+  const { selectedCenter } = useCenter();
   const [payments, setPayments] = useState<PaymentListItem[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -35,13 +37,14 @@ export default function DeliveryPaymentsPage() {
 
   useEffect(() => {
     loadPayments();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, selectedCenter]);
 
   const loadPayments = async () => {
+    if (!selectedCenter?.centerId) return;
+
     setIsLoading(true);
     try {
-      const centerId = JSON.parse(localStorage.getItem('selectedCenter') || '{}')?.centerId;
-      if (!centerId) return;
+      const centerId = selectedCenter.centerId;
 
       const params: any = {
         centerId,

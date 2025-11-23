@@ -10,8 +10,10 @@ import AlertModal from '@/components/common/AlertModal';
 import MerchantWithdrawalModal from '@/components/merchant-withdrawals/MerchantWithdrawalModal';
 import { formatDateTime, formatNumber, formatStatus } from '@/utils/format';
 import { SearchSection, SearchField, DateRange, RadioGroup, SearchInputWithSelect } from '@/components/common/SearchSection';
+import { useCenter } from '@/lib/contexts/CenterContext';
 
 export default function MerchantWithdrawalsPage() {
+  const { selectedCenter } = useCenter();
   const [withdrawals, setWithdrawals] = useState<MerchantWithdrawalListItem[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -50,17 +52,13 @@ export default function MerchantWithdrawalsPage() {
 
   useEffect(() => {
     loadWithdrawals();
-  }, [currentPage, pageSize, paymentPurpose]);
+  }, [currentPage, pageSize, paymentPurpose, selectedCenter]);
 
   const loadWithdrawals = async () => {
+    if (!selectedCenter?.centerId) return;
+
     setIsLoading(true);
     try {
-      const selectedCenter = JSON.parse(localStorage.getItem('selectedCenter') || '{}');
-      if (!selectedCenter?.centerId) {
-        setAlertModal({ isOpen: true, message: '센터를 선택해주세요.', type: 'error' });
-        return;
-      }
-
       const params: any = {
         centerId: selectedCenter.centerId,
         paymentPurpose,
@@ -196,11 +194,15 @@ export default function MerchantWithdrawalsPage() {
     {
       key: 'resultMessage',
       header: '결과메시지',
-      width: 'auto',
-      align: 'center' as const,
+      width: '250px',
+      align: 'left' as const,
       render: (row: MerchantWithdrawalListItem) => {
         const message = row.historyResultMessage || row.requestResultMessage || '-';
-        return <span className="text-sm">{message}</span>;
+        return (
+          <div className="text-xs sm:text-sm text-left break-words whitespace-normal max-w-[250px]" title={message}>
+            {message}
+          </div>
+        );
       },
     },
   ];

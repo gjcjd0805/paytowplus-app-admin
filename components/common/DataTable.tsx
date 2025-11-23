@@ -66,7 +66,7 @@ export function DataTable<T>({
       const rowIndex = info.row.index;
       return (
         <div
-          className={`overflow-hidden text-ellipsis whitespace-nowrap ${
+          className={`${
             col.align === "center"
               ? "text-center"
               : col.align === "right"

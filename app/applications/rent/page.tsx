@@ -9,9 +9,11 @@ import Pagination from '@/components/common/Pagination';
 import { formatDateTime, formatStatus } from '@/utils/format';
 import { useRouter } from 'next/navigation';
 import { SearchSection, SearchField, DateRange, RadioGroup, SearchInputWithSelect } from '@/components/common/SearchSection';
+import { useCenter } from '@/lib/contexts/CenterContext';
 
 export default function RentApplicationsPage() {
   const router = useRouter();
+  const { selectedCenter } = useCenter();
   const [applications, setApplications] = useState<RentApplicationListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,16 +44,14 @@ export default function RentApplicationsPage() {
 
   useEffect(() => {
     loadApplications();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, selectedCenter]);
 
   const loadApplications = async () => {
+    if (!selectedCenter?.centerId) return;
+
     setIsLoading(true);
     try {
-      const centerId = JSON.parse(localStorage.getItem('selectedCenter') || '{}')?.centerId;
-      if (!centerId) {
-        setIsLoading(false);
-        return;
-      }
+      const centerId = selectedCenter.centerId;
 
       const params: any = {
         centerId,

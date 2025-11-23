@@ -5,26 +5,21 @@ import type { AdminUser, Center } from '@/types/api';
 import { centersApi } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useSidebar } from '@/lib/contexts/SidebarContext';
+import { useCenter } from '@/lib/contexts/CenterContext';
 
 export default function Header() {
   const { toggleSidebar } = useSidebar();
+  const { selectedCenter, setSelectedCenter } = useCenter();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [centers, setCenters] = useState<Center[]>([]);
-  const [selectedCenter, setSelectedCenter] = useState<Center | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    // 로컬스토리지에서 사용자 정보 및 센터 정보 로드
+    // 로컬스토리지에서 사용자 정보 로드
     const storedUser = localStorage.getItem('user');
-    const storedCenter = localStorage.getItem('selectedCenter');
-
     if (storedUser) {
       setUser(JSON.parse(storedUser));
-    }
-
-    if (storedCenter) {
-      setSelectedCenter(JSON.parse(storedCenter));
     }
 
     // 센터 목록 로드
@@ -37,8 +32,7 @@ export default function Header() {
       setCenters(response.centers);
 
       // 선택된 센터가 없으면 첫 번째 센터 선택
-      const storedCenter = localStorage.getItem('selectedCenter');
-      if (!storedCenter && response.centers.length > 0) {
+      if (!selectedCenter && response.centers.length > 0) {
         handleCenterChange(response.centers[0]);
       }
     } catch (error) {
@@ -47,7 +41,6 @@ export default function Header() {
   };
 
   const handleCenterChange = (center: Center) => {
-    setSelectedCenter(center);
     const centerData = {
       centerId: center.centerId,
       centerName: center.name,
@@ -56,8 +49,7 @@ export default function Header() {
       recurringMid: center.recurringMid,
       manualMid: center.manualMid,
     };
-    localStorage.setItem('selectedCenter', JSON.stringify(centerData));
-    window.location.reload(); // 페이지 새로고침하여 센터 변경 반영
+    setSelectedCenter(centerData);
   };
 
   const handleLogout = () => {
