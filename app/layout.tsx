@@ -3,7 +3,7 @@ import "./globals.css";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 export const metadata: Metadata = {
-  title: "Pay++ 앱 관리자",
+  title: "Pay++ 앱 관리",
   description: "Pay++ 관리자 페이지",
 };
 
