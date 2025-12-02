@@ -1,28 +1,38 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import UserForm from '@/components/users/UserForm';
 
 export default function UserDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const userId = params.id === 'new' ? null : Number(params.id);
+  const initialUserId = params.id === 'new' ? null : Number(params.id);
+  const [pageTitle, setPageTitle] = useState(initialUserId ? '회원 수정' : '회원 등록');
 
   const handleClose = () => {
     router.push('/users');
+  };
+
+  const handleUserCreated = (newUserId: number) => {
+    // URL 변경 (새로고침 없이)
+    window.history.replaceState(null, '', `/users/${newUserId}`);
+    setPageTitle('회원 수정');
   };
 
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">
-          {userId ? '회원 수정' : '회원 등록'}
+          {pageTitle}
         </h1>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <UserForm userId={userId} onClose={handleClose} />
-      </div>
+      <UserForm
+        userId={initialUserId}
+        onClose={handleClose}
+        onUserCreated={handleUserCreated}
+      />
     </div>
   );
 }

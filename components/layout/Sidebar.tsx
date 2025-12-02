@@ -29,8 +29,8 @@ const menuItems: MenuItem[] = [
         <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
       </svg>
     ),
-    label: '신청 관리',
-    path: '/applications',
+    label: '월세 관리',
+    path: '/rent-management',
     subItems: [
       {
         icon: (
@@ -40,6 +40,15 @@ const menuItems: MenuItem[] = [
         ),
         label: '월세 신청 내역',
         path: '/applications/rent',
+      },
+      {
+        icon: (
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+          </svg>
+        ),
+        label: '자동결제 회원',
+        path: '/rent-auto-payment',
       },
     ],
   },
@@ -149,8 +158,8 @@ export default function Sidebar() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   useEffect(() => {
-    // 결제관리, 회원출금관리, 신청 관리는 항상 펼쳐진 상태 유지
-    const alwaysExpanded = ['/payments', '/withdrawals', '/applications'];
+    // 결제관리, 회원출금관리, 월세 관리는 항상 펼쳐진 상태 유지
+    const alwaysExpanded = ['/payments', '/withdrawals', '/rent-management'];
     const newExpandedMenus = [...alwaysExpanded];
 
     // 현재 경로에 해당하는 메뉴도 자동 확장

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { rentApplicationsApi } from '@/lib/api';
 import type { RentApplicationDetail } from '@/types/api';
-import { formatDateTime, formatStatus } from '@/utils/format';
+import { formatDateTime, formatStatus, getBankName } from '@/utils/format';
 import RentApprovalModal, { type RentApprovalData } from '@/components/applications/RentApprovalModal';
 import AlertModal from '@/components/common/AlertModal';
 
@@ -17,9 +17,7 @@ export default function RentApplicationDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
-  const [cancelReason, setCancelReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageName, setSelectedImageName] = useState<string>('');
@@ -134,27 +132,7 @@ export default function RentApplicationDetailPage() {
     }
   };
 
-  const handleCancel = async () => {
-    if (!detail || !cancelReason.trim()) {
-      setAlertModal({ isOpen: true, message: '해지 사유를 입력해주세요.', type: 'error' });
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const adminId = Number(localStorage.getItem('adminId'));
-      await rentApplicationsApi.cancel(detail.userId, { adminId, reason: cancelReason });
-      setShowCancelModal(false);
-      setCancelReason('');
-      setAlertModal({ isOpen: true, message: '해지가 완료되었습니다.', type: 'success' });
-      loadDetail();
-    } catch (error) {
-      console.error('해지 실패:', error);
-      setAlertModal({ isOpen: true, message: '해지에 실패했습니다.', type: 'error' });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  // Note: 해지 기능은 회원 정보 페이지에서만 제공
 
   if (isLoading) {
     return (
@@ -244,6 +222,77 @@ export default function RentApplicationDetailPage() {
         </div>
       </div>
 
+      {/* 약관 동의 정보 */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-4">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">약관 동의 정보</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+            <span className="text-sm text-gray-700">서비스 이용약관</span>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${detail.serviceTermsAgreed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {detail.serviceTermsAgreed ? '동의' : '미동의'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+            <span className="text-sm text-gray-700">개인정보 처리방침</span>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${detail.privacyPolicyAgreed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {detail.privacyPolicyAgreed ? '동의' : '미동의'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+            <span className="text-sm text-gray-700">전자금융거래 이용약관</span>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${detail.electronicFinanceAgreed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {detail.electronicFinanceAgreed ? '동의' : '미동의'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+            <span className="text-sm text-gray-700">결제 이용약관</span>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${detail.paymentAgreed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {detail.paymentAgreed ? '동의' : '미동의'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+            <span className="text-sm text-gray-700">마케팅 정보 수신</span>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${detail.marketingAgreed ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+              {detail.marketingAgreed ? '동의' : '미동의'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+            <span className="text-sm text-gray-700">맞춤 광고</span>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${detail.personalizedAdAgreed ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+              {detail.personalizedAdAgreed ? '동의' : '미동의'}
+            </span>
+          </div>
+        </div>
+        {detail.termsAgreedAt && (
+          <div className="mt-3 text-sm text-gray-500">
+            동의일시: {formatDateTime(detail.termsAgreedAt)}
+          </div>
+        )}
+      </div>
+
+      {/* 임대인 계좌 정보 */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-4">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">임대인 계좌 정보</h2>
+        {detail.bankCode && detail.accountNumber ? (
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">은행</label>
+              <div className="text-sm text-gray-900">{getBankName(detail.bankCode)}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">계좌번호</label>
+              <div className="text-sm text-gray-900">{detail.accountNumber}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">예금주</label>
+              <div className="text-sm text-gray-900">{detail.accountHolder || '-'}</div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500">등록된 계좌 정보가 없습니다.</div>
+        )}
+      </div>
+
       {/* 제출 서류 */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-4">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">제출 서류</h2>
@@ -293,33 +342,23 @@ export default function RentApplicationDetailPage() {
         </div>
       </div>
 
-      {/* 액션 버튼 */}
-      <div className="flex justify-end gap-2">
-        {detail.status === 'PENDING' && (
-          <>
-            <button
-              onClick={() => setShowApproveModal(true)}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-            >
-              승인
-            </button>
-            <button
-              onClick={() => setShowRejectModal(true)}
-              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
-            >
-              거부
-            </button>
-          </>
-        )}
-        {detail.status === 'APPROVED' && (
+      {/* 액션 버튼 - 승인/거부만 (해지는 회원 정보에서 처리) */}
+      {detail.status === 'PENDING' && (
+        <div className="flex justify-end gap-2">
           <button
-            onClick={() => setShowCancelModal(true)}
-            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+            onClick={() => setShowApproveModal(true)}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
           >
-            해지
+            승인
           </button>
-        )}
-      </div>
+          <button
+            onClick={() => setShowRejectModal(true)}
+            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+          >
+            거부
+          </button>
+        </div>
+      )}
 
       {/* 승인 모달 */}
       <RentApprovalModal
@@ -328,6 +367,9 @@ export default function RentApplicationDetailPage() {
         onConfirm={handleApprove}
         userId={detail.userId}
         isProcessing={isProcessing}
+        documentBankCode={detail.bankCode}
+        documentAccountNumber={detail.accountNumber}
+        documentAccountHolder={detail.accountHolder}
       />
 
       {/* 거부 모달 */}
@@ -358,40 +400,6 @@ export default function RentApplicationDetailPage() {
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors disabled:opacity-50"
               >
                 {isProcessing ? '처리 중...' : '거부'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 해지 모달 */}
-      {showCancelModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">해지 사유 입력</h3>
-            <textarea
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-              placeholder="해지 사유를 입력해주세요"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm mb-4 h-32 resize-none"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setShowCancelModal(false);
-                  setCancelReason('');
-                }}
-                disabled={isProcessing}
-                className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={isProcessing}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors disabled:opacity-50"
-              >
-                {isProcessing ? '처리 중...' : '해지'}
               </button>
             </div>
           </div>

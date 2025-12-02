@@ -6,26 +6,6 @@ import { accountApi } from '@/lib/api/account';
 import type { Center } from '@/types/api';
 import AlertModal from '@/components/common/AlertModal';
 
-interface RentApprovalModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (rentData: RentApprovalData) => void;
-  userId: number;
-  isProcessing: boolean;
-}
-
-export interface RentApprovalData {
-  rentPgCode: string;
-  rentRecurringMid: string;
-  rentRecurringTid: string;
-  rentManualMid: string;
-  rentManualTid: string;
-  rentFeeRate: number;
-  rentBankCode: string;
-  rentAccountNumber: string;
-  rentAccountHolder: string;
-}
-
 // 은행 코드 매핑
 const BANK_LIST = [
   { code: '004', name: 'KB국민은행' },
@@ -51,23 +31,65 @@ const BANK_LIST = [
   { code: '092', name: '토스뱅크' },
 ];
 
+interface RentApprovalModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (rentData: RentApprovalData) => void;
+  userId: number;
+  isProcessing: boolean;
+  // 서류에서 가져온 임대인 계좌 정보
+  documentBankCode?: string;
+  documentAccountNumber?: string;
+  documentAccountHolder?: string;
+}
+
+export interface RentApprovalData {
+  // 한도 설정
+  rentPerLimitPrice: number;
+  rentDailyLimitPrice: number;
+  rentAnnualLimitPrice: number;
+  rentAllowedInstallmentMonths: number;
+  // PG 설정
+  rentPgCode: string;
+  rentRecurringMid: string;
+  rentRecurringTid: string;
+  rentManualMid: string;
+  rentManualTid: string;
+  rentFeeRate: number;
+  // 임대인 계좌 정보
+  rentBankCode: string;
+  rentAccountNumber: string;
+  rentAccountHolder: string;
+}
+
 export default function RentApprovalModal({
   isOpen,
   onClose,
   onConfirm,
   userId,
   isProcessing,
+  documentBankCode,
+  documentAccountNumber,
+  documentAccountHolder,
 }: RentApprovalModalProps) {
+  // 한도 설정 (기본값 설정: 건 1,000,000 / 일 1,000,000 / 연 100,000,000)
+  const [rentPerLimitPrice, setRentPerLimitPrice] = useState('1000000');
+  const [rentDailyLimitPrice, setRentDailyLimitPrice] = useState('1000000');
+  const [rentAnnualLimitPrice, setRentAnnualLimitPrice] = useState('100000000');
+  const [rentAllowedInstallmentMonths, setRentAllowedInstallmentMonths] = useState('12');
+
+  // PG 설정
   const [rentPgCode, setRentPgCode] = useState('WEROUTE');
   const [rentRecurringMid, setRentRecurringMid] = useState('');
   const [rentRecurringTid, setRentRecurringTid] = useState('');
   const [rentManualMid, setRentManualMid] = useState('');
   const [rentManualTid, setRentManualTid] = useState('');
   const [rentFeeRate, setRentFeeRate] = useState('');
+
+  // 임대인 계좌 정보
   const [rentBankCode, setRentBankCode] = useState('');
   const [rentAccountNumber, setRentAccountNumber] = useState('');
   const [rentAccountHolder, setRentAccountHolder] = useState('');
-
   const [accountVerified, setAccountVerified] = useState(false);
   const [accountVerifying, setAccountVerifying] = useState(false);
 
@@ -85,8 +107,18 @@ export default function RentApprovalModal({
   useEffect(() => {
     if (isOpen) {
       loadCenterInfo();
+      // 서류에서 가져온 계좌 정보 자동 세팅
+      if (documentBankCode) {
+        setRentBankCode(documentBankCode);
+      }
+      if (documentAccountNumber) {
+        setRentAccountNumber(documentAccountNumber);
+      }
+      if (documentAccountHolder) {
+        setRentAccountHolder(documentAccountHolder);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, documentBankCode, documentAccountNumber, documentAccountHolder]);
 
   const loadCenterInfo = async () => {
     try {
@@ -150,7 +182,17 @@ export default function RentApprovalModal({
   }, [rentBankCode, rentAccountNumber]);
 
   const handleSubmit = () => {
-    // 유효성 검사
+    // 한도 설정 검사
+    if (!rentPerLimitPrice || !rentDailyLimitPrice || !rentAnnualLimitPrice) {
+      setAlertModal({
+        isOpen: true,
+        type: 'warning',
+        message: '한도 정보를 모두 입력해주세요.',
+      });
+      return;
+    }
+
+    // PG 설정 검사
     if (!rentRecurringMid || !rentRecurringTid) {
       setAlertModal({
         isOpen: true,
@@ -178,11 +220,12 @@ export default function RentApprovalModal({
       return;
     }
 
+    // 계좌 정보 검사
     if (!rentBankCode || !rentAccountNumber || !rentAccountHolder) {
       setAlertModal({
         isOpen: true,
         type: 'warning',
-        message: '계좌 정보를 모두 입력해주세요.',
+        message: '임대인 계좌 정보를 모두 입력해주세요.',
       });
       return;
     }
@@ -197,6 +240,10 @@ export default function RentApprovalModal({
     }
 
     const rentData: RentApprovalData = {
+      rentPerLimitPrice: Number(rentPerLimitPrice),
+      rentDailyLimitPrice: Number(rentDailyLimitPrice),
+      rentAnnualLimitPrice: Number(rentAnnualLimitPrice),
+      rentAllowedInstallmentMonths: Number(rentAllowedInstallmentMonths),
       rentPgCode,
       rentRecurringMid,
       rentRecurringTid,
@@ -212,7 +259,11 @@ export default function RentApprovalModal({
   };
 
   const handleClose = () => {
-    // 모달 닫을 때 초기화
+    // 모달 닫을 때 초기화 (한도는 기본값으로)
+    setRentPerLimitPrice('1000000');
+    setRentDailyLimitPrice('1000000');
+    setRentAnnualLimitPrice('100000000');
+    setRentAllowedInstallmentMonths('12');
     setRentPgCode('WEROUTE');
     setRentRecurringMid('');
     setRentRecurringTid('');
@@ -245,7 +296,69 @@ export default function RentApprovalModal({
           </div>
 
           <div className="p-6">
-            {/* 상단 2개 항목 */}
+            {/* 한도 설정 */}
+            <div className="border-2 border-gray-300 rounded-lg p-4 mb-4">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3 text-center bg-purple-50 py-2 rounded">
+                한도 설정
+              </h4>
+              <div className="grid grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    건 한도 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={rentPerLimitPrice}
+                    onChange={(e) => setRentPerLimitPrice(e.target.value)}
+                    placeholder="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    일 한도 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={rentDailyLimitPrice}
+                    onChange={(e) => setRentDailyLimitPrice(e.target.value)}
+                    placeholder="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    연 한도 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={rentAnnualLimitPrice}
+                    onChange={(e) => setRentAnnualLimitPrice(e.target.value)}
+                    placeholder="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    허용할부 <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={rentAllowedInstallmentMonths}
+                    onChange={(e) => setRentAllowedInstallmentMonths(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => (
+                      <option key={month} value={month}>{month}개월</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* PG 설정 */}
             <div className="flex gap-3 mb-4">
               <div className="w-32">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -281,7 +394,7 @@ export default function RentApprovalModal({
               </div>
             </div>
 
-            {/* 3개 박스 */}
+            {/* MID/TID 및 계좌 정보 설정 */}
             <div className="grid grid-cols-3 gap-4">
               {/* 정기결제 박스 */}
               <div className="border-2 border-gray-300 rounded-lg p-4">
@@ -347,10 +460,10 @@ export default function RentApprovalModal({
                 </div>
               </div>
 
-              {/* 계좌정보 박스 */}
+              {/* 임대인 계좌정보 박스 */}
               <div className="border-2 border-gray-300 rounded-lg p-4">
                 <h4 className="text-sm font-semibold text-gray-700 mb-3 text-center bg-green-50 py-2 rounded">
-                  계좌정보
+                  임대인 계좌정보
                 </h4>
                 <div className="space-y-3">
                   <div>
@@ -384,15 +497,14 @@ export default function RentApprovalModal({
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
-                      계좌주 <span className="text-red-500">*</span>
+                      예금주 <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={rentAccountHolder}
-                      onChange={(e) => setRentAccountHolder(e.target.value)}
-                      placeholder="계좌주"
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                      readOnly={accountVerified}
+                      readOnly
+                      placeholder="계좌 인증 후 자동입력"
+                      className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-600 cursor-not-allowed outline-none text-sm"
                     />
                   </div>
                   <div>
@@ -406,7 +518,7 @@ export default function RentApprovalModal({
                           : 'bg-blue-600 hover:bg-blue-700 text-white'
                       }`}
                     >
-                      {accountVerifying ? '인증 중...' : accountVerified ? '✓ 인증 완료' : '계좌 인증'}
+                      {accountVerifying ? '인증 중...' : accountVerified ? '인증 완료' : '계좌 인증'}
                     </button>
                   </div>
                 </div>
@@ -415,8 +527,8 @@ export default function RentApprovalModal({
 
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
               <p className="text-sm text-blue-800">
-                <span className="font-semibold">💡 안내:</span> 월세 승인 시 위 정보가 회원의 월세 결제 정보로 등록됩니다.
-                계좌 인증을 반드시 완료해주세요.
+                <span className="font-semibold">안내:</span> 월세 승인 시 위 정보가 회원의 월세 결제 정보로 등록됩니다.
+                임대인 계좌 인증을 반드시 완료해주세요.
               </p>
             </div>
           </div>

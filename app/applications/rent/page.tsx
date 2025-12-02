@@ -6,7 +6,7 @@ import type { RentApplicationListItem, RentApprovalStatus } from '@/types/api';
 import { DataTable } from '@/components/common/DataTable';
 import { LoadingModal } from '@/components/common/LoadingModal';
 import Pagination from '@/components/common/Pagination';
-import { formatDateTime, formatStatus } from '@/utils/format';
+import { formatDateTime, formatStatus, getBankName } from '@/utils/format';
 import { useRouter } from 'next/navigation';
 import { SearchSection, SearchField, DateRange, RadioGroup, SearchInputWithSelect } from '@/components/common/SearchSection';
 import { useCenter } from '@/lib/contexts/CenterContext';
@@ -107,12 +107,12 @@ export default function RentApplicationsPage() {
   };
 
   const columns = [
-    { key: 'documentId', header: 'NO', width: '80px', align: 'center' as const, render: (_row: RentApplicationListItem, index: number) => currentPage * pageSize + index + 1 },
-    { key: 'uploadedAt', header: '신청일시', width: '180px', align: 'center' as const, render: (row: RentApplicationListItem) => formatDateTime(row.uploadedAt) },
-    { key: 'userName', header: '회원명', width: '120px', align: 'center' as const },
-    { key: 'loginId', header: '아이디', width: '150px', align: 'center' as const },
-    { key: 'phoneNumber', header: '연락처', width: '130px', align: 'center' as const },
-    { key: 'status', header: '승인상태', width: '100px', align: 'center' as const, render: (row: RentApplicationListItem) => (
+    { key: 'documentId', header: 'NO', width: '60px', align: 'center' as const, render: (_row: RentApplicationListItem, index: number) => currentPage * pageSize + index + 1 },
+    { key: 'uploadedAt', header: '신청일시', width: '150px', align: 'center' as const, render: (row: RentApplicationListItem) => formatDateTime(row.uploadedAt) },
+    { key: 'userName', header: '회원명', width: '100px', align: 'center' as const },
+    { key: 'loginId', header: '아이디', width: '120px', align: 'center' as const },
+    { key: 'phoneNumber', header: '연락처', width: '120px', align: 'center' as const },
+    { key: 'status', header: '승인상태', width: '80px', align: 'center' as const, render: (row: RentApplicationListItem) => (
       <span className={`px-2 py-1 rounded text-xs font-medium ${
         row.status === 'APPROVED' ? 'bg-blue-100 text-blue-800' :
         row.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
@@ -123,9 +123,26 @@ export default function RentApplicationsPage() {
         {formatStatus(row.status)}
       </span>
     )},
-    { key: 'reviewedAt', header: '처리일시', width: '180px', align: 'center' as const, render: (row: RentApplicationListItem) => row.reviewedAt ? formatDateTime(row.reviewedAt) : '-' },
-    { key: 'rejectedReason', header: '거부사유', width: '200px', align: 'left' as const, render: (row: RentApplicationListItem) => row.rejectedReason || '-' },
-    { key: 'cancelledReason', header: '해지사유', width: '200px', align: 'left' as const, render: (row: RentApplicationListItem) => row.cancelledReason || '-' },
+    { key: 'termsAgreed', header: '약관동의', width: '80px', align: 'center' as const, render: (row: RentApplicationListItem) => {
+      const allRequired = row.serviceTermsAgreed && row.privacyPolicyAgreed && row.electronicFinanceAgreed && row.paymentAgreed;
+      return (
+        <span className={`px-2 py-1 rounded text-xs font-medium ${allRequired ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {allRequired ? '완료' : '미완료'}
+        </span>
+      );
+    }},
+    { key: 'bankInfo', header: '임대인계좌', width: '180px', align: 'left' as const, render: (row: RentApplicationListItem) => {
+      if (!row.bankCode || !row.accountNumber) return '-';
+      return (
+        <span className="text-xs">
+          {getBankName(row.bankCode)} {row.accountNumber}
+          {row.accountHolder && <span className="text-gray-500 ml-1">({row.accountHolder})</span>}
+        </span>
+      );
+    }},
+    { key: 'reviewedAt', header: '처리일시', width: '150px', align: 'center' as const, render: (row: RentApplicationListItem) => row.reviewedAt ? formatDateTime(row.reviewedAt) : '-' },
+    { key: 'rejectedReason', header: '거부사유', width: '150px', align: 'left' as const, render: (row: RentApplicationListItem) => row.rejectedReason || '-' },
+    { key: 'cancelledReason', header: '해지사유', width: '150px', align: 'left' as const, render: (row: RentApplicationListItem) => row.cancelledReason || '-' },
   ];
 
   return (

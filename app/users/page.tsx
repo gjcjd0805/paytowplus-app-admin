@@ -145,13 +145,15 @@ export default function UsersPage() {
       width: '100px',
       align: 'center' as const,
       render: (row: UserListItem) => (
-        <span className={`px-2 py-1 rounded text-xs font-medium ${
-          row.rentApprovalStatus === 'APPROVED' ? 'bg-blue-100 text-blue-800' :
-          row.rentApprovalStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
-          {formatStatus(row.rentApprovalStatus)}
-        </span>
+        row.rentApprovalStatus ? (
+          <span className={`px-2 py-1 rounded text-xs font-medium ${
+            row.rentApprovalStatus === 'APPROVED' ? 'bg-blue-100 text-blue-800' :
+            row.rentApprovalStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {formatStatus(row.rentApprovalStatus)}
+          </span>
+        ) : <span className="text-gray-400">-</span>
       )
     },
     {
@@ -159,21 +161,21 @@ export default function UsersPage() {
       header: '배달비수수료율',
       width: '120px',
       align: 'center' as const,
-      render: (row: UserListItem) => `${row.deliveryFeeRate}%`
+      render: (row: UserListItem) => row.deliveryFeeRate != null ? `${row.deliveryFeeRate}%` : '-'
     },
     {
       key: 'rentFeeRate',
       header: '월세수수료율',
       width: '120px',
       align: 'center' as const,
-      render: (row: UserListItem) => row.rentFeeRate ? `${row.rentFeeRate}%` : '-'
+      render: (row: UserListItem) => row.rentFeeRate != null ? `${row.rentFeeRate}%` : '-'
     },
     {
-      key: 'allowedInstallmentMonths',
-      header: '허용할부개월',
-      width: '120px',
+      key: 'deliveryAllowedInstallmentMonths',
+      header: '배달비할부',
+      width: '100px',
       align: 'center' as const,
-      render: (row: UserListItem) => `${row.allowedInstallmentMonths}개월`
+      render: (row: UserListItem) => row.deliveryAllowedInstallmentMonths != null ? `${row.deliveryAllowedInstallmentMonths}개월` : '-'
     },
     {
       key: 'phoneNumber',
@@ -182,18 +184,18 @@ export default function UsersPage() {
       align: 'center' as const
     },
     {
-      key: 'perLimitPrice',
-      header: '건한도',
+      key: 'deliveryPerLimitPrice',
+      header: '배달비건한도',
       width: '120px',
       align: 'center' as const,
-      render: (row: UserListItem) => formatNumber(row.perLimitPrice)
+      render: (row: UserListItem) => row.deliveryPerLimitPrice != null ? formatNumber(row.deliveryPerLimitPrice) : '-'
     },
     {
-      key: 'annualLimitPrice',
-      header: '연한도',
+      key: 'deliveryAnnualLimitPrice',
+      header: '배달비연한도',
       width: '130px',
       align: 'center' as const,
-      render: (row: UserListItem) => formatNumber(row.annualLimitPrice)
+      render: (row: UserListItem) => row.deliveryAnnualLimitPrice != null ? formatNumber(row.deliveryAnnualLimitPrice) : '-'
     },
     {
       key: 'actions',

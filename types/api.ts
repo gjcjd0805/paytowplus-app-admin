@@ -21,7 +21,7 @@ export type PG = 'WEROUTE';
 export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
 export type PaymentType = 'RECURRING' | 'MANUAL';
 export type PaymentPurpose = 'DELIVERY_CHARGE' | 'MONTHLY_RENT';
-export type SettlementStatus = 'PENDING' | 'REQUESTED' | 'SUCCESS' | 'FAILED';
+export type SettlementStatus = 'PENDING' | 'REQUESTED' | 'SUCCESS' | 'FAILED' | 'MANUAL_SUCCESS';
 export type WithdrawalStatus = 'PENDING' | 'SUCCESS' | 'FAILED';
 export type NoticeType = 'GENERAL' | 'IMPORTANT' | 'FIXED';
 export type PopupStatus = 'INACTIVE' | 'ACTIVE';
@@ -95,32 +95,159 @@ export interface AdminUserSearchParams {
 }
 
 // ========== 회원 관련 타입 ==========
+// 회원 기본정보
+export interface UserBasicInfo {
+  id: number;
+  terminalCode: string;
+  loginId: string;
+  userName: string;
+  depositorName: string;
+  ownerIdentityNumber: string;
+  phoneNumber: string;
+  userStatus: string;
+  isProductNameMutable: boolean;
+  isPayerNameMutable: boolean;
+  memo: string | null;
+  registDt: string;
+  updateDt: string;
+  // PIN 관련 정보
+  pinEnabled: boolean;
+  pinSetAt: string | null;
+  pinFailCount: number;
+  pinLocked: boolean;
+  pinLockedAt: string | null;
+}
+
+// 배달비 설정 정보
+export interface DeliveryConfigInfo {
+  perLimitPrice: number;
+  dailyLimitPrice: number;
+  annualLimitPrice: number;
+  allowedInstallmentMonths: number;
+  pgCode: string;
+  recurringMid: string;
+  recurringTid: string;
+  manualMid: string;
+  manualTid: string;
+  feeRate: number;
+  bankCode: string;
+  accountNumber: string;
+  accountHolder: string;
+}
+
+// 월세 설정 정보
+export interface RentConfigInfo {
+  perLimitPrice: number;
+  dailyLimitPrice: number;
+  annualLimitPrice: number;
+  allowedInstallmentMonths: number;
+  pgCode: string;
+  recurringMid: string;
+  recurringTid: string;
+  manualMid: string;
+  manualTid: string;
+  feeRate: number;
+  bankCode: string;
+  accountNumber: string;
+  accountHolder: string;
+  approvalStatus: string;
+  approvedDt: string | null;
+  // 서류 이미지
+  contractImagePath: string | null;
+  idCardImagePath: string | null;
+  bankbookImagePath: string | null;
+  // 약관 동의 정보
+  serviceTermsAgreed: boolean;
+  privacyPolicyAgreed: boolean;
+  electronicFinanceAgreed: boolean;
+  paymentAgreed: boolean;
+  marketingAgreed: boolean;
+  personalizedAdAgreed: boolean;
+  termsAgreedAt: string | null;
+  // 자동결제 설정
+  autoPaymentEnabled: boolean;
+  autoPaymentAmount: number | null;
+  autoPaymentFee: number | null;
+  autoPaymentTransferFee: number | null;
+  autoPaymentSettlementAmount: number | null;
+  autoPaymentDayOfMonth: number | null;
+  autoTransferDayOfMonth: number | null;
+  autoPaymentStartMonth: string | null;
+  autoPaymentEndMonth: string | null;
+  autoPaymentCardId: number | null;
+}
+
+// 자동결제 이력
+export interface AutoPaymentHistoryInfo {
+  id: number;
+  targetMonth: string;
+  paymentDate: string;
+  transferDate: string;
+  amount: number;
+  fee: number;
+  transferFee: number;
+  settlementAmount: number;
+  cardId: number;
+  status: string;
+  failureReason: string | null;
+  retryCount: number;
+  processedAt: string | null;
+  createdDt: string;
+}
+
+// 자동결제 이력 목록 응답
+export interface AutoPaymentHistoryListResponse {
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  histories: AutoPaymentHistoryInfo[];
+}
+
+// 회원 상세 조회 응답 (섹션별 분리)
+export interface UserDetailResponse {
+  basic: UserBasicInfo;
+  deliveryConfig: DeliveryConfigInfo | null;
+  rentConfig: RentConfigInfo | null;
+}
+
+// 기존 User 인터페이스 (호환성 유지, 추후 제거)
 export interface User {
   id: number;
   terminalCode: string;
   loginId: string;
   userName: string;
+  depositorName: string;
+  ownerIdentityNumber: string;
   phoneNumber: string;
-  perLimitPrice: number;
-  dailyLimitPrice: number;
-  annualLimitPrice: number;
   userStatus: string;
-  allowedInstallmentMonths: number;
   isProductNameMutable: boolean;
   isPayerNameMutable: boolean;
 
-  // 배달비 관련
-  deliveryPgCode: string;
-  deliveryRecurringMid: string;
-  deliveryRecurringTid: string;
-  deliveryManualMid: string;
-  deliveryManualTid: string;
-  deliveryFeeRate: number;
-  deliveryAccountNumber: string;
-  deliveryAccountHolder: string;
-  deliveryBankCode: string;
+  // 배달비 한도 관련
+  deliveryPerLimitPrice: number | null;
+  deliveryDailyLimitPrice: number | null;
+  deliveryAnnualLimitPrice: number | null;
+  deliveryAllowedInstallmentMonths: number | null;
 
-  // 월세 관련
+  // 배달비 PG 관련
+  deliveryPgCode: string | null;
+  deliveryRecurringMid: string | null;
+  deliveryRecurringTid: string | null;
+  deliveryManualMid: string | null;
+  deliveryManualTid: string | null;
+  deliveryFeeRate: number | null;
+  deliveryAccountNumber: string | null;
+  deliveryAccountHolder: string | null;
+  deliveryBankCode: string | null;
+
+  // 월세 한도 관련
+  rentPerLimitPrice: number | null;
+  rentDailyLimitPrice: number | null;
+  rentAnnualLimitPrice: number | null;
+  rentAllowedInstallmentMonths: number | null;
+
+  // 월세 PG 관련
   rentPgCode: string | null;
   rentRecurringMid: string | null;
   rentRecurringTid: string | null;
@@ -138,82 +265,66 @@ export interface User {
   updateDt: string;
 }
 
+// 회원 등록 요청 (기본정보만)
 export interface UserCreateRequest {
   centerId: number;
   loginId: string;
   password: string;
   userName: string;
+  depositorName: string;
+  ownerIdentityNumber: string;
   phoneNumber: string;
-  perLimitPrice: number;
-  dailyLimitPrice: number;
-  annualLimitPrice: number;
   userStatus: UserStatus;
-  allowedInstallmentMonths: number;
   isProductNameMutable: boolean;
   isPayerNameMutable: boolean;
-
-  // 배달비 관련
-  deliveryPgCode: PG;
-  deliveryRecurringMid: string;
-  deliveryRecurringTid: string;
-  deliveryManualMid: string;
-  deliveryManualTid: string;
-  deliveryFeeRate: number;
-  deliveryAccountNumber: string;
-  deliveryAccountHolder: string;
-  deliveryBankCode: string;
-
-  // 월세 관련 (선택)
-  rentPgCode?: PG;
-  rentRecurringMid?: string;
-  rentRecurringTid?: string;
-  rentManualMid?: string;
-  rentManualTid?: string;
-  rentFeeRate?: number;
-  rentAccountNumber?: string;
-  rentAccountHolder?: string;
-  rentBankCode?: string;
-  rentApprovalStatus?: RentApprovalStatus;
-
   memo?: string;
 }
 
+// 회원 수정 요청 (기본정보만)
 export interface UserUpdateRequest {
   password?: string;
   userName: string;
+  depositorName: string;
+  ownerIdentityNumber: string;
   phoneNumber: string;
+  userStatus: UserStatus;
+  isProductNameMutable: boolean;
+  isPayerNameMutable: boolean;
+  memo?: string;
+}
+
+// 배달비 설정 생성/수정 요청
+export interface DeliveryConfigRequest {
   perLimitPrice: number;
   dailyLimitPrice: number;
   annualLimitPrice: number;
-  userStatus: UserStatus;
   allowedInstallmentMonths: number;
-  isProductNameMutable: boolean;
-  isPayerNameMutable: boolean;
+  pgCode: PG;
+  recurringMid: string;
+  recurringTid: string;
+  manualMid: string;
+  manualTid: string;
+  feeRate: number;
+  bankCode: string;
+  accountNumber: string;
+  accountHolder: string;
+}
 
-  // 배달비 관련
-  deliveryPgCode: PG;
-  deliveryRecurringMid: string;
-  deliveryRecurringTid: string;
-  deliveryManualMid: string;
-  deliveryManualTid: string;
-  deliveryFeeRate: number;
-  deliveryAccountNumber: string;
-  deliveryAccountHolder: string;
-  deliveryBankCode: string;
-
-  // 월세 관련 (선택)
-  rentPgCode?: PG;
-  rentRecurringMid?: string;
-  rentRecurringTid?: string;
-  rentManualMid?: string;
-  rentManualTid?: string;
-  rentFeeRate?: number;
-  rentAccountNumber?: string;
-  rentAccountHolder?: string;
-  rentBankCode?: string;
-  rentApprovalStatus?: RentApprovalStatus;
-
-  memo?: string;
+// 월세 설정 생성/수정 요청
+export interface RentConfigRequest {
+  perLimitPrice: number;
+  dailyLimitPrice: number;
+  annualLimitPrice: number;
+  allowedInstallmentMonths: number;
+  pgCode: PG;
+  recurringMid: string;
+  recurringTid: string;
+  manualMid: string;
+  manualTid: string;
+  feeRate: number;
+  bankCode: string;
+  accountNumber: string;
+  accountHolder: string;
 }
 
 export interface UserListItem {
@@ -223,13 +334,20 @@ export interface UserListItem {
   loginId: string;
   userName: string;
   userStatus: string;
-  allowedInstallmentMonths: number;
-  deliveryFeeRate: number;
-  rentApprovalStatus: string;
-  rentFeeRate: number | null;
   phoneNumber: string;
-  perLimitPrice: number;
-  annualLimitPrice: number;
+
+  // 배달비 한도
+  deliveryPerLimitPrice: number | null;
+  deliveryAnnualLimitPrice: number | null;
+  deliveryAllowedInstallmentMonths: number | null;
+  deliveryFeeRate: number | null;
+
+  // 월세 한도
+  rentPerLimitPrice: number | null;
+  rentAnnualLimitPrice: number | null;
+  rentAllowedInstallmentMonths: number | null;
+  rentApprovalStatus: string | null;
+  rentFeeRate: number | null;
 }
 
 export interface UserListResponse {
@@ -255,11 +373,14 @@ export interface UserSearchParams {
 // ========== 결제 관련 타입 ==========
 export interface PaymentListItem {
   no: number;
+  paymentId: number;
   pg: PG;
   paymentPurpose: PaymentPurpose;
   requestDt: string;
   approvalDt?: string;
   paymentStatus: PaymentStatus;
+  withdrawStatus?: SettlementStatus;  // 출금상태
+  scheduledSettlementDt?: string;     // 이체예정일시
   userName: string;
   paymentType: PaymentType;
   installmentMonths: number;
@@ -283,9 +404,11 @@ export interface PaymentSearchParams {
   centerId: number;
   page?: number;
   size?: number;
+  paymentPurpose?: PaymentPurpose;
   requestDateFrom?: string;
   requestDateTo?: string;
   paymentStatus?: PaymentStatus;
+  withdrawStatus?: SettlementStatus;
   userName?: string;
   approvalNumber?: string;
   cardNumber?: string;
@@ -347,6 +470,18 @@ export interface RentApplicationListItem {
   reviewedAt?: string;
   rejectedReason?: string;
   cancelledReason?: string;
+  // 약관 동의 여부
+  serviceTermsAgreed: boolean;
+  privacyPolicyAgreed: boolean;
+  electronicFinanceAgreed: boolean;
+  paymentAgreed: boolean;
+  marketingAgreed: boolean;
+  personalizedAdAgreed: boolean;
+  termsAgreedAt?: string;
+  // 임대인 계좌 정보
+  bankCode?: string;
+  accountNumber?: string;
+  accountHolder?: string;
 }
 
 export interface RentApplicationDetail {
@@ -364,19 +499,38 @@ export interface RentApplicationDetail {
   reviewedBy?: number;
   rejectedReason?: string;
   cancelledReason?: string;
+  // 약관 동의 여부
+  serviceTermsAgreed: boolean;
+  privacyPolicyAgreed: boolean;
+  electronicFinanceAgreed: boolean;
+  paymentAgreed: boolean;
+  marketingAgreed: boolean;
+  personalizedAdAgreed: boolean;
+  termsAgreedAt?: string;
+  // 임대인 계좌 정보
+  bankCode?: string;
+  accountNumber?: string;
+  accountHolder?: string;
 }
 
 export interface ApproveRequest {
   adminId: number;
-  rentPgCode?: string;
-  rentRecurringMid?: string;
-  rentRecurringTid?: string;
-  rentManualMid?: string;
-  rentManualTid?: string;
-  rentFeeRate?: number;
-  rentBankCode?: string;
-  rentAccountNumber?: string;
-  rentAccountHolder?: string;
+  // 한도 설정
+  rentPerLimitPrice: number;
+  rentDailyLimitPrice: number;
+  rentAnnualLimitPrice: number;
+  rentAllowedInstallmentMonths: number;
+  // PG 설정
+  rentPgCode: string;
+  rentRecurringMid: string;
+  rentRecurringTid: string;
+  rentManualMid: string;
+  rentManualTid: string;
+  rentFeeRate: number;
+  // 임대인 계좌 정보
+  rentBankCode: string;
+  rentAccountNumber: string;
+  rentAccountHolder: string;
 }
 
 export interface RejectRequest {
@@ -577,4 +731,51 @@ export interface MerchantWithdrawalResponse {
   withdrawFee: number | null;
   completedAt: string | null;
   retryCount: number;
+}
+
+// ========== 월세 자동결제 회원 관련 타입 ==========
+export interface RentAutoPaymentUserItem {
+  no: number;
+  userId: number;
+  loginId: string;
+  userName: string;
+  phoneNumber: string;
+  // 자동결제 설정
+  autoPaymentEnabled: boolean;
+  autoPaymentAmount: number | null;
+  autoPaymentFee: number | null;
+  autoPaymentTransferFee: number | null;
+  autoPaymentSettlementAmount: number | null;
+  autoPaymentDayOfMonth: number | null;
+  autoTransferDayOfMonth: number | null;
+  autoPaymentStartMonth: string | null;
+  autoPaymentEndMonth: string | null;
+  autoPaymentCardId: number | null;
+  // 임대인 계좌 정보
+  bankCode: string;
+  accountNumber: string;
+  accountHolder: string;
+  // 수수료율
+  feeRate: number;
+  // 승인일
+  approvedAt: string | null;
+}
+
+export interface RentAutoPaymentListResponse {
+  users: RentAutoPaymentUserItem[];
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+}
+
+export interface RentAutoPaymentSearchParams {
+  centerId: number;
+  page?: number;
+  size?: number;
+  userName?: string;
+  loginId?: string;
+  phoneNumber?: string;
+  autoPaymentEnabled?: boolean;
+  autoPaymentDayOfMonth?: number;
 }

@@ -32,6 +32,7 @@ export default function RentPaymentsPage() {
   const [dateFrom, setDateFrom] = useState(getLocalDateString(firstDayOfMonth));
   const [dateTo, setDateTo] = useState(getLocalDateString(today));
   const [paymentStatus, setPaymentStatus] = useState<'all' | 'PENDING' | 'SUCCESS' | 'FAILED'>('all');
+  const [withdrawStatus, setWithdrawStatus] = useState<'all' | 'PENDING' | 'REQUESTED' | 'SUCCESS' | 'FAILED' | 'MANUAL_SUCCESS'>('all');
   const [searchType, setSearchType] = useState<'userName' | 'approvalNumber' | 'cardNumber' | 'tid'>('userName');
   const [searchKeyword, setSearchKeyword] = useState('');
 
@@ -63,6 +64,10 @@ export default function RentPaymentsPage() {
         params.paymentStatus = paymentStatus;
       }
 
+      if (withdrawStatus !== 'all') {
+        params.withdrawStatus = withdrawStatus;
+      }
+
       if (searchKeyword) {
         params[searchType] = searchKeyword;
       }
@@ -90,6 +95,7 @@ export default function RentPaymentsPage() {
     setDateFrom(getLocalDateString(firstDayOfMonth));
     setDateTo(getLocalDateString(today));
     setPaymentStatus('all');
+    setWithdrawStatus('all');
     setSearchType('userName');
     setSearchKeyword('');
     setCurrentPage(0);
@@ -140,6 +146,31 @@ export default function RentPaymentsPage() {
           {formatStatus(row.paymentStatus)}
         </span>
       )
+    },
+    {
+      key: 'withdrawStatus',
+      header: '출금상태',
+      width: '100px',
+      align: 'center' as const,
+      render: (row: PaymentListItem) => (
+        <span className={`px-2 py-1 rounded text-xs font-medium ${
+          row.withdrawStatus === 'SUCCESS' ? 'bg-green-100 text-green-800' :
+          row.withdrawStatus === 'MANUAL_SUCCESS' ? 'bg-blue-100 text-blue-800' :
+          row.withdrawStatus === 'FAILED' ? 'bg-red-100 text-red-800' :
+          row.withdrawStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+          row.withdrawStatus === 'REQUESTED' ? 'bg-orange-100 text-orange-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {row.withdrawStatus ? formatStatus(row.withdrawStatus) : '-'}
+        </span>
+      )
+    },
+    {
+      key: 'scheduledSettlementDt',
+      header: '이체예정일',
+      width: '180px',
+      align: 'center' as const,
+      render: (row: PaymentListItem) => row.scheduledSettlementDt ? formatDateTime(row.scheduledSettlementDt) : '-'
     },
     {
       key: 'userName',
@@ -249,6 +280,22 @@ export default function RentPaymentsPage() {
               { value: 'PENDING', label: '대기' },
               { value: 'SUCCESS', label: '완료' },
               { value: 'FAILED', label: '실패' },
+            ]}
+          />
+        </SearchField>
+
+        <SearchField label="출금상태" className="flex-1">
+          <RadioGroup
+            name="withdrawStatus"
+            value={withdrawStatus}
+            onChange={(value) => setWithdrawStatus(value as any)}
+            options={[
+              { value: 'all', label: '전체' },
+              { value: 'PENDING', label: '대기' },
+              { value: 'REQUESTED', label: '요청' },
+              { value: 'SUCCESS', label: '완료' },
+              { value: 'FAILED', label: '실패' },
+              { value: 'MANUAL_SUCCESS', label: '수기' },
             ]}
           />
         </SearchField>
