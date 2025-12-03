@@ -42,6 +42,7 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
   const [isProductNameMutable, setIsProductNameMutable] = useState(true);
   const [isPayerNameMutable, setIsPayerNameMutable] = useState(true);
   const [userStatus, setUserStatus] = useState<'ACTIVE' | 'TERMINATED'>('ACTIVE');
+  const [pgCode, setPgCode] = useState<'WEROUTE'>('WEROUTE');  // PG 코드 (회원 레벨로 통합)
   const [memo, setMemo] = useState('');
   const [terminalCode, setTerminalCode] = useState('');
   const [copiedTerminalCode, setCopiedTerminalCode] = useState(false);
@@ -61,7 +62,6 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
     dailyLimitPrice: null,
     annualLimitPrice: null,
     allowedInstallmentMonths: null,
-    pgCode: null,
     recurringMid: null,
     recurringTid: null,
     manualMid: null,
@@ -79,7 +79,6 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
     dailyLimitPrice: null,
     annualLimitPrice: null,
     allowedInstallmentMonths: null,
-    pgCode: null,
     recurringMid: null,
     recurringTid: null,
     manualMid: null,
@@ -183,6 +182,7 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
       setIsProductNameMutable(basic.isProductNameMutable);
       setIsPayerNameMutable(basic.isPayerNameMutable);
       setUserStatus(basic.userStatus as 'ACTIVE' | 'TERMINATED');
+      setPgCode(basic.pg || 'WEROUTE');  // PG 코드 로드
       setMemo(basic.memo || '');
       setTerminalCode(basic.terminalCode || '');
 
@@ -201,7 +201,6 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
           dailyLimitPrice: delivery.dailyLimitPrice,
           annualLimitPrice: delivery.annualLimitPrice,
           allowedInstallmentMonths: delivery.allowedInstallmentMonths,
-          pgCode: delivery.pgCode,
           recurringMid: delivery.recurringMid,
           recurringTid: delivery.recurringTid,
           manualMid: delivery.manualMid,
@@ -225,7 +224,6 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
           dailyLimitPrice: rent.dailyLimitPrice,
           annualLimitPrice: rent.annualLimitPrice,
           allowedInstallmentMonths: rent.allowedInstallmentMonths,
-          pgCode: rent.pgCode,
           recurringMid: rent.recurringMid,
           recurringTid: rent.recurringTid,
           manualMid: rent.manualMid,
@@ -289,7 +287,6 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
           dailyLimitPrice: config.dailyLimitPrice!,
           annualLimitPrice: config.annualLimitPrice!,
           allowedInstallmentMonths: config.allowedInstallmentMonths!,
-          pgCode: config.pgCode as 'WEROUTE',
           recurringMid: config.recurringMid!,
           recurringTid: config.recurringTid!,
           manualMid: config.manualMid!,
@@ -319,7 +316,6 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
           dailyLimitPrice: config.dailyLimitPrice!,
           annualLimitPrice: config.annualLimitPrice!,
           allowedInstallmentMonths: config.allowedInstallmentMonths!,
-          pgCode: config.pgCode as 'WEROUTE',
           recurringMid: config.recurringMid!,
           recurringTid: config.recurringTid!,
           manualMid: config.manualMid!,
@@ -544,6 +540,7 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
         // 기본정보 저장
         const createData = {
           centerId,
+          pg: pgCode,  // PG 코드 (회원 레벨로 통합)
           loginId,
           password: password || 'password123',
           userName,
@@ -558,6 +555,45 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
 
         const result = await usersApi.create(createData);
         const newUserId = result.userId;
+
+        // 배달비/월세 설정 초기화 (신규 회원은 설정이 없음)
+        setDeliveryConfig({
+          type: 'delivery',
+          perLimitPrice: null,
+          dailyLimitPrice: null,
+          annualLimitPrice: null,
+          allowedInstallmentMonths: null,
+          recurringMid: null,
+          recurringTid: null,
+          manualMid: null,
+          manualTid: null,
+          feeRate: null,
+          bankCode: null,
+          accountNumber: null,
+          accountHolder: null,
+          accountVerified: false,
+        });
+        setRentConfig({
+          type: 'rent',
+          perLimitPrice: null,
+          dailyLimitPrice: null,
+          annualLimitPrice: null,
+          allowedInstallmentMonths: null,
+          recurringMid: null,
+          recurringTid: null,
+          manualMid: null,
+          manualTid: null,
+          feeRate: null,
+          bankCode: null,
+          accountNumber: null,
+          accountHolder: null,
+          accountVerified: false,
+          approvalStatus: 'NOT_APPLIED',
+          approvedDt: null,
+        });
+        setHasDeliveryConfig(false);
+        setHasRentConfig(false);
+        setRentConfigInfo(null);
 
         setAlertModal({
           isOpen: true,
@@ -689,8 +725,8 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
           {/* 기본정보 탭 */}
           {activeTab === 'basic' && (
           <div className="p-4 space-y-4">
-            {/* 첫 번째 줄: 아이디, 비밀번호, 회원상태 */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* 첫 번째 줄: 아이디, 비밀번호, PG, 회원상태 */}
+            <div className="grid grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   아이디 <span className="text-red-500">*</span>
@@ -718,6 +754,26 @@ export default function UserForm({ userId, onClose, onUserCreated }: UserFormPro
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
                   required={!currentUserId}
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  PG <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center space-x-4 h-10">
+                  <label className={`flex items-center ${currentUserId ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <input
+                      type="radio"
+                      checked={pgCode === 'WEROUTE'}
+                      onChange={() => setPgCode('WEROUTE')}
+                      disabled={!!currentUserId}
+                      className="w-4 h-4 text-blue-600 focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                    />
+                    <span className={`ml-2 text-sm ${currentUserId ? 'text-gray-400' : 'text-gray-700'}`}>위루트</span>
+                  </label>
+                </div>
+                {currentUserId && (
+                  <p className="text-xs text-gray-500 mt-1">PG는 수정할 수 없습니다</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

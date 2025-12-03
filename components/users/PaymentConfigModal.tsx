@@ -59,7 +59,6 @@ export default function PaymentConfigModal({
   const [dailyLimitPrice, setDailyLimitPrice] = useState('');
   const [annualLimitPrice, setAnnualLimitPrice] = useState('');
   const [allowedInstallmentMonths, setAllowedInstallmentMonths] = useState('12');
-  const [pgCode, setPgCode] = useState('WEROUTE');
   const [recurringMid, setRecurringMid] = useState('');
   const [recurringTid, setRecurringTid] = useState('');
   const [manualMid, setManualMid] = useState('');
@@ -93,7 +92,6 @@ export default function PaymentConfigModal({
       setDailyLimitPrice(config.dailyLimitPrice?.toString() || '1000000');
       setAnnualLimitPrice(config.annualLimitPrice?.toString() || '100000000');
       setAllowedInstallmentMonths(config.allowedInstallmentMonths?.toString() || '12');
-      setPgCode(config.pgCode || 'WEROUTE');
       setRecurringMid(config.recurringMid || centerMid?.recurringMid || '');
       setRecurringTid(config.recurringTid || '');
       setManualMid(config.manualMid || centerMid?.manualMid || '');
@@ -210,7 +208,6 @@ export default function PaymentConfigModal({
       dailyLimitPrice: Number(dailyLimitPrice.replace(/,/g, '')),
       annualLimitPrice: Number(annualLimitPrice.replace(/,/g, '')),
       allowedInstallmentMonths: Number(allowedInstallmentMonths),
-      pgCode,
       recurringMid,
       recurringTid,
       manualMid,
@@ -329,48 +326,34 @@ export default function PaymentConfigModal({
               </div>
             </div>
 
-            {/* PG 설정 */}
+            {/* MID/TID 설정 */}
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
                   <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
                 </svg>
-                PG 설정
+                MID/TID 설정
               </h3>
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    PG <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={pgCode}
-                    onChange={(e) => setPgCode(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
-                  >
-                    <option value="WEROUTE">위루트</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    수수료율 (%) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="15"
-                    value={feeRate}
-                    onChange={(e) => {
-                      const value = parseFloat(e.target.value);
-                      if (value <= 15 || e.target.value === '') {
-                        setFeeRate(e.target.value);
-                      }
-                    }}
-                    placeholder="0.00"
-                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </div>
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  수수료율 (%) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="15"
+                  value={feeRate}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    if (value <= 15 || e.target.value === '') {
+                      setFeeRate(e.target.value);
+                    }
+                  }}
+                  placeholder="0.00"
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

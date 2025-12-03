@@ -7,4 +7,5 @@ export { rentApplicationsApi } from './rent-applications';
 export { centersApi } from './centers';
 export { noticesApi } from './notices';
 export { popupApi } from './popup';
+export { pushApi } from './push';
 export { accountApi } from './account';

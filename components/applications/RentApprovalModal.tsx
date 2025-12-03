@@ -49,8 +49,7 @@ export interface RentApprovalData {
   rentDailyLimitPrice: number;
   rentAnnualLimitPrice: number;
   rentAllowedInstallmentMonths: number;
-  // PG 설정
-  rentPgCode: string;
+  // MID/TID 설정 (pgCode는 사용자의 AppUser.pg 값을 자동 사용)
   rentRecurringMid: string;
   rentRecurringTid: string;
   rentManualMid: string;
@@ -78,8 +77,7 @@ export default function RentApprovalModal({
   const [rentAnnualLimitPrice, setRentAnnualLimitPrice] = useState('100000000');
   const [rentAllowedInstallmentMonths, setRentAllowedInstallmentMonths] = useState('12');
 
-  // PG 설정
-  const [rentPgCode, setRentPgCode] = useState('WEROUTE');
+  // MID/TID 설정
   const [rentRecurringMid, setRentRecurringMid] = useState('');
   const [rentRecurringTid, setRentRecurringTid] = useState('');
   const [rentManualMid, setRentManualMid] = useState('');
@@ -244,7 +242,6 @@ export default function RentApprovalModal({
       rentDailyLimitPrice: Number(rentDailyLimitPrice),
       rentAnnualLimitPrice: Number(rentAnnualLimitPrice),
       rentAllowedInstallmentMonths: Number(rentAllowedInstallmentMonths),
-      rentPgCode,
       rentRecurringMid,
       rentRecurringTid,
       rentManualMid,
@@ -264,7 +261,6 @@ export default function RentApprovalModal({
     setRentDailyLimitPrice('1000000');
     setRentAnnualLimitPrice('100000000');
     setRentAllowedInstallmentMonths('12');
-    setRentPgCode('WEROUTE');
     setRentRecurringMid('');
     setRentRecurringTid('');
     setRentManualMid('');
@@ -358,40 +354,26 @@ export default function RentApprovalModal({
               </div>
             </div>
 
-            {/* PG 설정 */}
-            <div className="flex gap-3 mb-4">
-              <div className="w-32">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  PG <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={rentPgCode}
-                  onChange={(e) => setRentPgCode(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                >
-                  <option value="WEROUTE">위루트</option>
-                </select>
-              </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  수수료율 (%) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="15"
-                  value={rentFeeRate}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value);
-                    if (value <= 15 || e.target.value === '') {
-                      setRentFeeRate(e.target.value);
-                    }
-                  }}
-                  placeholder="예: 3.5"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                />
-              </div>
+            {/* 수수료율 설정 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                수수료율 (%) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="15"
+                value={rentFeeRate}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  if (value <= 15 || e.target.value === '') {
+                    setRentFeeRate(e.target.value);
+                  }
+                }}
+                placeholder="예: 3.5"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+              />
             </div>
 
             {/* MID/TID 및 계좌 정보 설정 */}

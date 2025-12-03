@@ -39,8 +39,7 @@ export interface PaymentConfigData {
   dailyLimitPrice: number | null;
   annualLimitPrice: number | null;
   allowedInstallmentMonths: number | null;
-  // PG 설정
-  pgCode: string | null;
+  // MID/TID 설정
   recurringMid: string | null;
   recurringTid: string | null;
   manualMid: string | null;
@@ -99,7 +98,7 @@ const AUTO_PAYMENT_STATUS_LABELS: Record<string, { label: string; className: str
 
 export default function PaymentConfigCard({ config, onEdit, onCancel, isNew, userId, rentConfigInfo }: PaymentConfigCardProps) {
   const { icon, title, color } = CONFIG_LABELS[config.type];
-  const hasData = config.perLimitPrice !== null || config.pgCode !== null;
+  const hasData = config.perLimitPrice !== null || config.recurringMid !== null;
 
   // 월세인 경우 승인 상태 확인
   const approvalStatus = config.type === 'rent' ? config.approvalStatus : null;
@@ -238,14 +237,10 @@ export default function PaymentConfigCard({ config, onEdit, onCancel, isNew, use
             </div>
           </div>
 
-          {/* PG/수수료 정보 */}
+          {/* 수수료/TID 정보 */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">PG/수수료</h4>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">수수료/TID</h4>
             <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">PG</span>
-                <span className="font-medium">{config.pgCode === 'WEROUTE' ? '위루트' : config.pgCode || '-'}</span>
-              </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">수수료율</span>
                 <span className="font-medium">{config.feeRate !== null ? `${config.feeRate}%` : '-'}</span>

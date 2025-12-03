@@ -135,6 +135,16 @@ const menuItems: MenuItem[] = [
   {
     icon: (
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M17.147 3.147a.5.5 0 00-.294-.147H3a1 1 0 00-1 1v10a1 1 0 001 1h1v2a1 1 0 001.6.8L9 15h8a1 1 0 001-1V4a1 1 0 00-1-1h-.853zM4 5h12v8H8.5L6 14.5V13H4V5z" />
+        <path d="M7 7h6v1H7V7zm0 2h4v1H7V9z" />
+      </svg>
+    ),
+    label: '푸시알림',
+    path: '/push',
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z" clipRule="evenodd" />
       </svg>
     ),

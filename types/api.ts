@@ -108,6 +108,7 @@ export interface UserBasicInfo {
   isProductNameMutable: boolean;
   isPayerNameMutable: boolean;
   memo: string | null;
+  pg: PG;  // PG 코드 (회원 레벨로 통합)
   registDt: string;
   updateDt: string;
   // PIN 관련 정보
@@ -124,7 +125,6 @@ export interface DeliveryConfigInfo {
   dailyLimitPrice: number;
   annualLimitPrice: number;
   allowedInstallmentMonths: number;
-  pgCode: string;
   recurringMid: string;
   recurringTid: string;
   manualMid: string;
@@ -141,7 +141,6 @@ export interface RentConfigInfo {
   dailyLimitPrice: number;
   annualLimitPrice: number;
   allowedInstallmentMonths: number;
-  pgCode: string;
   recurringMid: string;
   recurringTid: string;
   manualMid: string;
@@ -268,6 +267,7 @@ export interface User {
 // 회원 등록 요청 (기본정보만)
 export interface UserCreateRequest {
   centerId: number;
+  pg: PG;  // PG 코드 (회원 레벨로 통합)
   loginId: string;
   password: string;
   userName: string;
@@ -299,7 +299,6 @@ export interface DeliveryConfigRequest {
   dailyLimitPrice: number;
   annualLimitPrice: number;
   allowedInstallmentMonths: number;
-  pgCode: PG;
   recurringMid: string;
   recurringTid: string;
   manualMid: string;
@@ -316,7 +315,6 @@ export interface RentConfigRequest {
   dailyLimitPrice: number;
   annualLimitPrice: number;
   allowedInstallmentMonths: number;
-  pgCode: PG;
   recurringMid: string;
   recurringTid: string;
   manualMid: string;
@@ -520,8 +518,7 @@ export interface ApproveRequest {
   rentDailyLimitPrice: number;
   rentAnnualLimitPrice: number;
   rentAllowedInstallmentMonths: number;
-  // PG 설정
-  rentPgCode: string;
+  // PG 설정 (pgCode는 사용자의 AppUser.pg 값을 자동 사용)
   rentRecurringMid: string;
   rentRecurringTid: string;
   rentManualMid: string;
