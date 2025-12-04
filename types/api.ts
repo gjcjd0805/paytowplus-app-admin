@@ -154,7 +154,6 @@ export interface RentConfigInfo {
   // 서류 이미지
   contractImagePath: string | null;
   idCardImagePath: string | null;
-  bankbookImagePath: string | null;
   // 약관 동의 정보
   serviceTermsAgreed: boolean;
   privacyPolicyAgreed: boolean;
@@ -490,7 +489,6 @@ export interface RentApplicationDetail {
   phoneNumber: string;
   contractImagePath: string;
   idCardImagePath: string;
-  bankbookImagePath: string;
   status: RentApprovalStatus;
   uploadedAt: string;
   reviewedAt?: string;

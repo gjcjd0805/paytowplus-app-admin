@@ -325,20 +325,6 @@ export default function RentApplicationDetailPage() {
               />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">통장 사본</label>
-            <div className="border border-gray-200 rounded overflow-hidden cursor-pointer hover:opacity-75 transition-opacity">
-              <img
-                src={detail.bankbookImagePath}
-                alt="통장 사본"
-                className="w-full h-64 object-contain bg-gray-50"
-                onClick={() => handleImageClick(detail.bankbookImagePath, `통장_사본_${detail.documentId}.jpg`)}
-                onError={(e) => {
-                  e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af"%3E이미지 없음%3C/text%3E%3C/svg%3E';
-                }}
-              />
-            </div>
-          </div>
         </div>
       </div>
 

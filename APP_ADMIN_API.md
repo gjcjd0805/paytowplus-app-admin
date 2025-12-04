@@ -865,7 +865,6 @@ GET /admin/api/v1/rent/documents?centerId=1&status=PENDING&userName=김&page=0&s
     "phoneNumber": "01012345678",
     "contractImagePath": "/uploads/rent/contract_101.jpg",
     "idCardImagePath": "/uploads/rent/idcard_101.jpg",
-    "bankbookImagePath": "/uploads/rent/bankbook_101.jpg",
     "status": "PENDING",
     "uploadedAt": "2025-01-18T10:30:00",
     "reviewedAt": null,
@@ -886,7 +885,6 @@ GET /admin/api/v1/rent/documents?centerId=1&status=PENDING&userName=김&page=0&s
 | phoneNumber | String | 연락처 |
 | contractImagePath | String | 임대차계약서 이미지 경로 |
 | idCardImagePath | String | 신분증 이미지 경로 |
-| bankbookImagePath | String | 통장사본 이미지 경로 |
 | status | String | 승인 상태 |
 | uploadedAt | DateTime | 서류 업로드 일시 |
 | reviewedAt | DateTime | 검토 완료 일시 (null 가능) |

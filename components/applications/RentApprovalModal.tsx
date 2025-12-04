@@ -48,8 +48,7 @@ export interface RentApprovalData {
   rentPerLimitPrice: number;
   rentDailyLimitPrice: number;
   rentAnnualLimitPrice: number;
-  rentAllowedInstallmentMonths: number;
-  // MID/TID 설정 (pgCode는 사용자의 AppUser.pg 값을 자동 사용)
+  rentAllowedInstallmentMonths: number  // MID/TID 설정 (pgCode는 사용자의 AppUser.pg 값을 자동 사용)
   rentRecurringMid: string;
   rentRecurringTid: string;
   rentManualMid: string;
