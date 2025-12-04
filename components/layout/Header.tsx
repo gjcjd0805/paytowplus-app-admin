@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { AdminUser, Center } from '@/types/api';
-import { centersApi } from '@/lib/api';
+import { centersApi, adminApi } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useSidebar } from '@/lib/contexts/SidebarContext';
 import { useCenter } from '@/lib/contexts/CenterContext';
@@ -17,7 +17,7 @@ export default function Header() {
 
   useEffect(() => {
     // 로컬스토리지에서 사용자 정보 로드
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem('adminUser');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -43,7 +43,6 @@ export default function Header() {
   const handleCenterChange = (center: Center) => {
     const centerData = {
       centerId: center.centerId,
-      centerName: center.name,
       name: center.name,
       pgCode: center.pgCode,
       recurringMid: center.recurringMid,
@@ -52,11 +51,18 @@ export default function Header() {
     setSelectedCenter(centerData);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('selectedCenter');
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      // 서버에 로그아웃 요청 (쿠키 삭제)
+      await adminApi.logout();
+    } catch (error) {
+      console.error('로그아웃 API 호출 실패:', error);
+    } finally {
+      // localStorage 정리
+      localStorage.removeItem('adminUser');
+      localStorage.removeItem('selectedCenter');
+      router.push('/login');
+    }
   };
 
   return (

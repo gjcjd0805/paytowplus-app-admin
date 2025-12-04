@@ -49,8 +49,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 쿠키에서 토큰 확인
-  const token = request.cookies.get('token')?.value;
+  // 쿠키에서 토큰 확인 (httpOnly 쿠키: access_token)
+  const token = request.cookies.get('access_token')?.value;
 
   // 토큰이 없으면 로그인 페이지로 리다이렉트
   if (!token) {
@@ -64,8 +64,14 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     const response = NextResponse.redirect(url);
-    // 만료된 토큰 쿠키 삭제
-    response.cookies.delete('token');
+    // 만료된 토큰 쿠키 삭제 (동일한 속성으로 삭제해야 함)
+    response.cookies.set('access_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 0,
+    });
     return response;
   }
 

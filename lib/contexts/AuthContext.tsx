@@ -8,12 +8,11 @@ import { centersApi } from '@/lib/api';
 
 interface AuthContextType {
   user: AdminUser | null;
-  token: string | null;
   centers: Center[];
   selectedCenter: Center | null;
   isLoading: boolean;
   login: (loginId: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   selectCenter: (center: Center) => void;
 }
 
@@ -21,7 +20,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [centers, setCenters] = useState<Center[]>([]);
   const [selectedCenter, setSelectedCenter] = useState<Center | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,12 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // 초기 로드 시 로컬스토리지에서 데이터 복원
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem('adminUser');
     const storedCenter = localStorage.getItem('selectedCenter');
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
+    if (storedUser) {
       setUser(JSON.parse(storedUser));
 
       // 센터 목록 로드
@@ -67,14 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (loginId: string, password: string) => {
     try {
-      const response = await adminApi.login({ loginId, password });
+      const adminUser = await adminApi.login({ loginId, password });
 
-      setToken(response.token);
-      setUser(response.adminUser);
+      setUser(adminUser);
 
-      // 로컬스토리지에 저장
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.adminUser));
+      // adminUser만 로컬스토리지에 저장 (토큰은 httpOnly 쿠키로 자동 설정됨)
+      localStorage.setItem('adminUser', JSON.stringify(adminUser));
 
       // 센터 목록 로드
       await loadCenters();
@@ -86,20 +80,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    setSelectedCenter(null);
-    setCenters([]);
+  const logout = async () => {
+    try {
+      // 서버에 로그아웃 요청 (쿠키 삭제)
+      await adminApi.logout();
+    } catch (error) {
+      console.error('로그아웃 API 호출 실패:', error);
+    } finally {
+      setUser(null);
+      setSelectedCenter(null);
+      setCenters([]);
 
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('selectedCenter');
+      localStorage.removeItem('adminUser');
+      localStorage.removeItem('selectedCenter');
 
-    // 쿠키도 삭제
-    document.cookie = 'token=; path=/; max-age=0';
-
-    router.push('/login');
+      router.push('/login');
+    }
   };
 
   const selectCenter = (center: Center) => {
@@ -111,7 +107,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        token,
         centers,
         selectedCenter,
         isLoading,

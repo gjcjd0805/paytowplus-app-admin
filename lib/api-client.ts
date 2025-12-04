@@ -1,6 +1,7 @@
 import type { ApiResponse } from '@/types/api';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:18080/admin/api/v1';
+// 클라이언트에서는 /api 프록시 경로로 요청 (실제 백엔드 URL은 서버에서만 사용)
+const API_BASE_URL = '/api';
 
 export class ApiError extends Error {
   constructor(
@@ -20,24 +21,25 @@ class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  private getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('token');
+  private handleUnauthorized(): void {
+    if (typeof window === 'undefined') return;
+
+    // 인증 정보 삭제 (토큰은 httpOnly 쿠키라서 JS로 삭제 불가)
+    localStorage.removeItem('adminUser');
+    localStorage.removeItem('selectedCenter');
+
+    // 로그인 페이지로 리다이렉트
+    window.location.href = '/login';
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const token = this.getToken();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
     };
-
-    if (token && !endpoint.includes('/login')) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
 
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -45,11 +47,22 @@ class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include', // 쿠키 자동 전송
       });
+
+      // HTTP 401 응답 처리
+      if (response.status === 401) {
+        this.handleUnauthorized();
+        throw new ApiError(401, '인증이 만료되었습니다. 다시 로그인해주세요.');
+      }
 
       const data: ApiResponse<T> = await response.json();
 
+      // API 응답의 status가 401인 경우 처리
       if (!data.success) {
+        if (data.status === 401) {
+          this.handleUnauthorized();
+        }
         throw new ApiError(data.status, data.message, data.data);
       }
 
@@ -86,6 +99,13 @@ class ApiClient {
   async put<T>(endpoint: string, body?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  async patch<T>(endpoint: string, body?: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
       body: body ? JSON.stringify(body) : undefined,
     });
   }

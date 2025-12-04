@@ -36,15 +36,9 @@ class ServerUploadAdapter {
 
   _initRequest() {
     const xhr = (this.xhr = new XMLHttpRequest());
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:18080/admin/api/v1';
-    xhr.open('POST', `${apiBaseUrl}/upload/image`, true);
-
-    // 토큰이 있다면 추가
-    const token = localStorage.getItem('token');
-    if (token) {
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    }
-
+    // 프록시 경로 사용 (쿠키 자동 전송)
+    xhr.open('POST', '/api/upload/image', true);
+    xhr.withCredentials = true; // 쿠키 전송 허용
     xhr.responseType = 'json';
   }
 

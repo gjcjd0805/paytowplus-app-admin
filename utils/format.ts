@@ -44,6 +44,7 @@ export function formatStatus(status: string): string {
     // 결제 상태
     PENDING: '대기',
     SUCCESS: '완료',
+    MANUAL_SUCCESS: '수기완료',
     FAILED: '실패',
     CANCELLED: '취소',
 

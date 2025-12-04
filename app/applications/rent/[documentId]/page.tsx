@@ -36,21 +36,12 @@ export default function RentApplicationDetailPage() {
     if (!selectedImage) return;
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setAlertModal({ isOpen: true, message: '로그인이 필요합니다.', type: 'error' });
-        return;
-      }
-
-      // 백엔드 다운로드 API 사용
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:18080/admin/api/v1';
-      const downloadUrl = `${apiBaseUrl}/download/image?imageUrl=${encodeURIComponent(selectedImage)}`;
+      // 프록시 경로 사용 (쿠키 자동 전송)
+      const downloadUrl = `/api/download/image?imageUrl=${encodeURIComponent(selectedImage)}`;
 
       const response = await fetch(downloadUrl, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include', // 쿠키 전송
       });
 
       if (!response.ok) {

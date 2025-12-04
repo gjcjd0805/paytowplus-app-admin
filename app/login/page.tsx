@@ -18,14 +18,10 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await adminApi.login({ loginId, password });
+      const adminUser = await adminApi.login({ loginId, password });
 
-      // 로컬스토리지에 저장
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.adminUser));
-
-      // 쿠키에도 토큰 저장 (미들웨어에서 사용)
-      document.cookie = `token=${response.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      // adminUser만 localStorage에 저장 (토큰은 httpOnly 쿠키로 자동 설정됨)
+      localStorage.setItem('adminUser', JSON.stringify(adminUser));
 
       // 회원관리 페이지로 이동
       router.push('/users');

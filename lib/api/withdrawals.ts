@@ -1,5 +1,5 @@
 import { apiClient } from '../api-client';
-import type { WithdrawListResponse, WithdrawSearchParams } from '@/types/api';
+import type { WithdrawListResponse, WithdrawSearchParams, ManualCompleteResponse } from '@/types/api';
 
 export const withdrawalsApi = {
   // 배달비 출금 목록 조회
@@ -30,6 +30,14 @@ export const withdrawalsApi = {
 
     const response = await apiClient.get<WithdrawListResponse>(
       `/payment-withdraws/rent?${queryParams.toString()}`
+    );
+    return response;
+  },
+
+  // 수기 정산 완료 처리
+  manualComplete: async (settlementTransferId: number): Promise<ManualCompleteResponse> => {
+    const response = await apiClient.patch<ManualCompleteResponse>(
+      `/payment-withdraws/${settlementTransferId}/manual-complete`
     );
     return response;
   },

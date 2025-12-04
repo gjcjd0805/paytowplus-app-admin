@@ -10,9 +10,13 @@ import type {
 } from '@/types/api';
 
 export const adminApi = {
-  // 로그인
+  // 로그인 (토큰은 httpOnly 쿠키로 설정됨, adminUser만 반환)
   login: (data: AdminLoginRequest) =>
-    apiClient.post<{ token: string; adminUser: AdminUser }>('/admin/login', data),
+    apiClient.post<AdminUser>('/admin/login', data),
+
+  // 로그아웃 (쿠키 삭제)
+  logout: () =>
+    apiClient.post<null>('/admin/logout'),
 
   // 어드민 유저 목록 조회
   list: (params: AdminUserSearchParams) =>

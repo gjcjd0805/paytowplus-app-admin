@@ -6,6 +6,8 @@ import type { WithdrawListItem } from '@/types/api';
 import { DataTable } from '@/components/common/DataTable';
 import { LoadingModal } from '@/components/common/LoadingModal';
 import Pagination from '@/components/common/Pagination';
+import ConfirmModal from '@/components/common/ConfirmModal';
+import AlertModal from '@/components/common/AlertModal';
 import { formatDateTime, formatNumber, formatStatus } from '@/utils/format';
 import { SearchSection, SearchField, DateRange, RadioGroup, SearchInputWithSelect } from '@/components/common/SearchSection';
 import { useCenter } from '@/lib/contexts/CenterContext';
@@ -24,6 +26,13 @@ export default function DeliveryWithdrawalsPage() {
   const [totalAmount, setTotalAmount] = useState(0);
   const [totalFee, setTotalFee] = useState(0);
   const [totalSettlementAmount, setTotalSettlementAmount] = useState(0);
+
+  // 수기완료 모달
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'success' | 'error'>('success');
+  const [selectedWithdraw, setSelectedWithdraw] = useState<WithdrawListItem | null>(null);
 
   // 검색 조건
   const [dateType, setDateType] = useState<'all' | 'range'>('range');
@@ -109,6 +118,32 @@ export default function DeliveryWithdrawalsPage() {
     setSearchKeyword('');
     setCurrentPage(0);
     loadWithdrawals();
+  };
+
+  // 수기완료 처리
+  const handleManualComplete = (withdraw: WithdrawListItem) => {
+    setSelectedWithdraw(withdraw);
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirmManualComplete = async () => {
+    if (!selectedWithdraw) return;
+
+    setIsLoading(true);
+    try {
+      await withdrawalsApi.manualComplete(selectedWithdraw.settlementTransferId);
+      setAlertType('success');
+      setAlertMessage('수기 정산 완료 처리되었습니다.');
+      setAlertModalOpen(true);
+      loadWithdrawals();
+    } catch (error: any) {
+      setAlertType('error');
+      setAlertMessage(error.message || '수기 정산 완료 처리에 실패했습니다.');
+      setAlertModalOpen(true);
+    } finally {
+      setIsLoading(false);
+      setSelectedWithdraw(null);
+    }
   };
 
   const columns = [
@@ -220,6 +255,25 @@ export default function DeliveryWithdrawalsPage() {
       width: '200px',
       align: 'center' as const
     },
+    {
+      key: 'action',
+      header: '수기변경',
+      width: '100px',
+      align: 'center' as const,
+      render: (row: WithdrawListItem) => (
+        row.withdrawStatus === 'FAILED' ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleManualComplete(row);
+            }}
+            className="px-3 py-1.5 bg-orange-500 text-white text-xs font-medium rounded hover:bg-orange-600 transition-colors"
+          >
+            수기완료
+          </button>
+        ) : null
+      )
+    },
   ];
 
   return (
@@ -267,6 +321,7 @@ export default function DeliveryWithdrawalsPage() {
               { value: 'PENDING', label: '대기' },
               { value: 'REQUESTED', label: '요청완료' },
               { value: 'SUCCESS', label: '완료' },
+              { value: 'MANUAL_SUCCESS', label: '수기완료' },
               { value: 'FAILED', label: '실패' },
             ]}
           />
@@ -357,6 +412,29 @@ export default function DeliveryWithdrawalsPage() {
       />
 
       <LoadingModal isOpen={isLoading} />
+
+      {/* 수기완료 확인 모달 */}
+      <ConfirmModal
+        isOpen={confirmModalOpen}
+        onClose={() => {
+          setConfirmModalOpen(false);
+          setSelectedWithdraw(null);
+        }}
+        onConfirm={handleConfirmManualComplete}
+        title="수기 정산 완료"
+        message={`${selectedWithdraw?.userName}님의 출금 건을 수기 정산 완료 처리하시겠습니까?\n\n승인번호: ${selectedWithdraw?.approvalNumber || '-'}`}
+        type="warning"
+        confirmText="완료 처리"
+        cancelText="취소"
+      />
+
+      {/* 결과 알림 모달 */}
+      <AlertModal
+        isOpen={alertModalOpen}
+        onClose={() => setAlertModalOpen(false)}
+        message={alertMessage}
+        type={alertType}
+      />
     </div>
   );
 }

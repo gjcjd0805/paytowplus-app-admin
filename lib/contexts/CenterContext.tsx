@@ -4,7 +4,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 
 interface Center {
   centerId: number;
-  centerName: string;
   name: string;
   pgCode?: string;
   recurringMid?: string;

@@ -415,6 +415,7 @@ export interface PaymentSearchParams {
 // ========== 출금 관련 타입 ==========
 export interface WithdrawListItem {
   no: number;
+  settlementTransferId: number;
   requestDt: string;
   withdrawStatus: SettlementStatus;
   userName: string;
@@ -428,6 +429,13 @@ export interface WithdrawListItem {
   settlementAmount: number;
   scheduledSettlementDt: string;
   resultMessage: string;
+}
+
+// 수기 완료 처리 응답
+export interface ManualCompleteResponse {
+  settlementTransferId: number;
+  status: string;
+  completedDt: string;
 }
 
 export interface WithdrawListResponse {
