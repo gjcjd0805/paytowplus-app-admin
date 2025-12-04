@@ -61,7 +61,9 @@ dabaedal-payment-admin/
 │   │   └── [id]/page.tsx                   # 공지사항 상세/수정/신규
 │   ├── popup/
 │   │   └── page.tsx                        # 팝업 관리
-│   └── api/                                # Next.js API Routes (필요 시)
+│   └── api/
+│       └── [...path]/
+│           └── route.ts                    # API 프록시 (BFF 패턴)
 ├── components/                             # React 컴포넌트
 │   ├── layout/                             # 레이아웃 컴포넌트
 │   │   ├── DashboardLayout.tsx             # 대시보드 레이아웃 (Sidebar + Header)
@@ -117,7 +119,8 @@ dabaedal-payment-admin/
 **인증 및 권한**:
 - 로그인하지 않은 사용자: `/login`으로 리다이렉트 (middleware.ts)
 - 로그인 완료: 센터 선택 화면 또는 대시보드
-- 로그인 상태는 `localStorage`의 `token` 및 `adminUser`로 관리
+- **JWT 토큰은 httpOnly 쿠키로 관리** (XSS 방지)
+- 로그인한 관리자 정보는 `localStorage`의 `adminUser`에 저장
 
 **메뉴 구조** (Sidebar):
 1. **대시보드** - 메인 페이지 (센터 선택 안내)
@@ -142,20 +145,32 @@ dabaedal-payment-admin/
 - **Local State**: `useState` 사용 (페이지/컴포넌트 레벨)
 - **Server State**: API 호출 후 클라이언트에서 상태 관리 (React Query 미사용)
 - **Local Storage**:
-  - `token`: JWT 토큰
   - `adminUser`: 로그인한 관리자 정보
-  - `selectedCenterId`: 선택된 센터 ID
+  - `selectedCenter`: 선택된 센터 정보
+- **httpOnly Cookie**:
+  - `access_token`: JWT 토큰 (서버에서 설정, JS로 접근 불가)
 
 ### API Communication
 
+**BFF (Backend for Frontend) 패턴**:
+- 클라이언트는 백엔드 서버에 직접 요청하지 않고, Next.js API Routes를 통해 프록시
+- **브라우저 Network 탭에 백엔드 URL이 노출되지 않음** (보안 강화)
+
+**프록시 구조**:
+```
+브라우저 → /api/* (Next.js 프록시) → 백엔드 서버 (BACKEND_API_URL)
+```
+
 - **API Client**: `lib/api-client.ts`의 `ApiClient` 클래스
-- **Base URL**: `http://localhost:18080/admin/api/v1` (개발), 환경변수로 설정 가능
-- **Authentication**: Bearer Token (JWT)
-  - 로그인 API 제외 모든 요청에 `Authorization: Bearer {token}` 헤더 추가
-  - 토큰은 `localStorage`에 저장
+- **Base URL**: `/api` (프록시 경로)
+- **백엔드 URL**: `BACKEND_API_URL` 환경변수 (서버 사이드에서만 사용)
+- **Authentication**: httpOnly 쿠키 기반 JWT
+  - `credentials: 'include'`로 쿠키 자동 전송
+  - 백엔드에서 `Set-Cookie` 헤더로 토큰 설정
 - **API Response**: `{ success: boolean, message: string, status: number, data: T | null }`
 - **Error Handling**:
   - `ApiError` 클래스로 에러 처리
+  - **401 에러 시 자동으로 `/login` 페이지로 리다이렉트**
   - 서버 응답의 `success: false` 시 에러 throw
   - 네트워크 에러 시 기본 에러 메시지 표시
 
@@ -214,11 +229,16 @@ dabaedal-payment-admin/
 ## Key Features
 
 ### 1. 로그인 및 인증
-- **엔드포인트**: `POST /admin/api/v1/auth/login`
+- **엔드포인트**: `POST /admin/api/v1/admin/login`
 - **Request**: `{ loginId: string, password: string }`
-- **Response**: `{ token: string, adminUser: AdminUser }`
-- **저장**: `localStorage`에 `token`, `adminUser` 저장
+- **Response**: `AdminUser` (토큰은 httpOnly 쿠키로 설정됨)
+- **저장**: `localStorage`에 `adminUser`만 저장 (토큰은 쿠키에 자동 저장)
 - **리다이렉트**: 로그인 성공 시 메인 페이지로 이동
+- **계정 잠금**: 비밀번호 5회 오류 시 계정 잠금 (관리자에게 문의 필요)
+
+**로그아웃**:
+- **엔드포인트**: `POST /admin/api/v1/admin/logout`
+- **동작**: 서버에서 쿠키 삭제 (Max-Age=0), localStorage 정리
 
 ### 2. 센터 선택
 - **엔드포인트**: `GET /admin/api/v1/centers`
@@ -480,23 +500,36 @@ const fetchData = async (page: number) => {
 
 ### Authentication Flow
 
+**httpOnly 쿠키 기반 인증** (XSS 방지):
+
 1. **로그인 페이지** (`/login`):
    - `loginId`, `password` 입력
-   - `POST /admin/api/v1/auth/login`
-   - 성공 시: `localStorage`에 `token`, `adminUser` 저장
+   - `POST /api/admin/login` (프록시 경로)
+   - 성공 시:
+     - 서버에서 `Set-Cookie: access_token=JWT...` 헤더로 쿠키 설정
+     - `localStorage`에 `adminUser`만 저장
    - 리다이렉트: `/` (메인 대시보드)
+   - **계정 잠금**: 5회 연속 실패 시 계정 잠금
 
 2. **Middleware** (`middleware.ts`):
-   - 모든 페이지 접근 시 `token` 체크
+   - 모든 페이지 접근 시 `access_token` 쿠키 체크
    - 없으면 `/login`으로 리다이렉트
-   - `/login`은 제외
+   - `/login`, `/api/*` 경로는 제외
 
 3. **API Client** (`lib/api-client.ts`):
-   - 모든 요청에 `Authorization: Bearer {token}` 헤더 추가
-   - 로그인 API는 제외
+   - `credentials: 'include'`로 쿠키 자동 전송
+   - 401 에러 시 자동으로 `/login`으로 리다이렉트
 
-4. **로그아웃**:
-   - `localStorage`의 `token`, `adminUser`, `selectedCenterId` 삭제
+4. **API Proxy** (`app/api/[...path]/route.ts`):
+   - 클라이언트 요청을 백엔드로 프록시
+   - 쿠키 헤더 전달 (`Cookie`)
+   - 백엔드 응답의 `Set-Cookie` 헤더 전달
+   - Multipart 요청 지원
+
+5. **로그아웃**:
+   - `POST /api/admin/logout` 호출
+   - 서버에서 쿠키 삭제 (`Max-Age=0`)
+   - `localStorage`의 `adminUser`, `selectedCenter` 삭제
    - `/login`으로 리다이렉트
 
 ### Center Selection Flow
@@ -652,7 +685,12 @@ export function Modal({ isOpen, onClose, title, children, footer }: ModalProps) 
 
 ## Environment Variables
 
-- `NEXT_PUBLIC_API_BASE_URL`: 백엔드 API 기본 URL (기본: `http://localhost:18080/admin/api/v1`)
+```env
+# .env.local
+BACKEND_API_URL=http://localhost:18080/admin/api/v1  # 백엔드 API URL (서버 사이드에서만 사용)
+```
+
+- `BACKEND_API_URL`: 백엔드 API 기본 URL (서버 사이드 전용, 클라이언트에 노출되지 않음)
 
 ## Known Issues & Future Work
 
